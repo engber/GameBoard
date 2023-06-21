@@ -36,6 +36,11 @@ Tile GameBoard::displayedTileAt(unsigned row, unsigned col) const {
   return _useVT100Graphics ? tileAt(row, col) : Tile(glyphAt(row, col));
 }
 
+void GameBoard::setTileAt(unsigned row, unsigned col, Tile tile) {
+  unsigned i = tileIndex(row, col);
+  _tiles[i] = tile;
+}
+
 void GameBoard::setTileAt(unsigned row, unsigned col, char glyph, Tile::Color color) {
   unsigned i = tileIndex(row, col);
   _tiles[i] = Tile(glyph, color);
