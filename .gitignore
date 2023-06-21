@@ -1,0 +1,9 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!main.cpp
+!GameBoard.cpp
+!GameBoard.h
+!GameBoardTest.cpp
