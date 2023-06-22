@@ -35,14 +35,14 @@ public:
   char glyph() const { return _tileBytes & 0xFF; }
   Color color() const { return Color(_tileBytes >> 8); }
 
-  void draw(bool displayEmptyTiles = true) const;
-
   bool operator==(const Tile &);
 
   friend GameBoard;
 
 private:
   uint32_t _tileBytes;
+
+  void draw(bool displayEmptyTiles = true) const;
 
   // Used to bracket printing to stdout to draw in the specified color.
   static void colorStart(Color color);
@@ -66,23 +66,28 @@ public:
   void setHighlightedCoords(unsigned row, unsigned col);
   void setHighlightedCoordsColor(Tile::Color color) { _highlightedCoordsColor = color; };
 
-  // VT100 mode uses color and special symbols to draw the board.
+  // VT100 mode uses color, special symbols, and escape squences to draw the board.
+  // For debugging, it may be useful to turn this off so that:
+  //  - Drawing will append to the console rather than first clearing it.
+  //  - Scrolling back will show previously drawn boards.
+  //  - Debug printing will be viewable.
   bool useVT100Graphics() const { return _useVT100Graphics; }
   void setUseVT100Graphics(bool useVT100Graphics) {
     _useVT100Graphics = useVT100Graphics;
   }
 
+  // Displays a dot, instead of blank, for empty tiles.
   bool displayEmptyTiles() const { return _displayEmptyTiles; }
   void setDisplayEmptyTiles(bool displayEmptyTiles) {
     _displayEmptyTiles = displayEmptyTiles;
   }
 
-  // Clears the screen and then draws the tiles.
+  // Clears the screen, then draws the tiles.
   void draw() const;
 
-  // Use message to display text below the board. Use newlines for multiple lines.
-  std::string message() const {return _message; }
-  void setMessage(std::string newMessage) { _message = newMessage; }
+  // Messages are displayed below the board. Use newlines for multiple lines.
+  std::string message() const { return _message; }
+  void setMessage(std::string newMessage = "") { _message = newMessage; }
 
   // Accessors for the board's tiles.
   Tile tileAt(unsigned row, unsigned col) const;
@@ -98,7 +103,7 @@ public:
   void setGlyphAt(unsigned row, unsigned col, char glyph);
 
   // Commands are generally just the character pressed, e.g. 'a', ' ', 'x'.
-  // There are constants for special keys, e.g. the arrow keys - listed below.
+  // This enum provides constants representing special keys, e.g. the arrow keys - listed below.
   enum CommandKey : char;
 
   // nextCommandKey returns the key pressed by the user. It can be used sychronously or asynchronously.
@@ -169,7 +174,7 @@ enum GameBoard::CommandKey : char {
   escapeKey = 0x1B,
   deleteKey = 0x7F,
 
-  // Using high-bit values for special keys.
+  // Use high-bit values for special keys.
   unknownKey = char(0x80),
   arrowUpKey,
   arrowDownKey,
