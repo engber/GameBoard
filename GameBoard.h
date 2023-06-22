@@ -37,6 +37,8 @@ public:
 
   void draw(bool displayEmptyTiles = true) const;
 
+  bool operator==(const Tile &);
+
   friend GameBoard;
 
 private:

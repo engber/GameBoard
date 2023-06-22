@@ -469,7 +469,6 @@ void Tile::colorEnd(Color color) {
   }
 }
 
-
 void Tile::draw(bool displayEmptyTiles) const {
   // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
   char tileChar = glyph();
@@ -484,4 +483,9 @@ void Tile::draw(bool displayEmptyTiles) const {
   } else {
     cout << ' ';
   }
+}
+
+bool Tile::operator== (const Tile &rhs)
+{
+   return this->_tileBytes == rhs._tileBytes;
 }
