@@ -253,7 +253,11 @@ void GameBoard::drawRow(unsigned row, bool showCoords) const {
   for (unsigned c = 1; c < _width; c++) {
     cout << ' '; // a space between cols makes the board appear more "square."
     Tile tile = displayedTileAt(row, c);
+
+    // Escape mode interprets chars as special vt100 graphic glyphs.
+    vt100EscEnd();
     tile.draw(_displayEmptyTiles);
+    vt100EscStart();
   }
   cout << verticalLineGlyph();
   vt100EscEnd();

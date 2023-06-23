@@ -14,8 +14,6 @@ void GameBoardTestMain() {
   
   GameBoard board(20, 20);
 
-  board.setHighlightedCoordsColor(Tile::Color::vt100DarkBlue);
-
   char cmd = noKey;
 
   while (!done) {
