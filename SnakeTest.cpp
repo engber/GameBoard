@@ -48,8 +48,11 @@ void SnakeTestMain() {
   SnakeNode *snakeHead = NewHead(snake, 2, 10);
   for (unsigned i = 0; i < 6; ++i) {
     snakeHead = NewHead(snake, snakeHead->row + dr, snakeHead->col + dc);
-  }    
+  }
 
+  cout << "Press Any Key to Start\n";
+  board.nextCommandKey(0);
+  
   while (!gameOver) {
     char headGlyph = killed ? 'X' : '@';
     board.clearAllTiles();
