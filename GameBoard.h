@@ -7,73 +7,81 @@ class GameBoard;
 class Tile {
 public:
 
+  // Colors encode up to 3, 6-bit attribute values.
+
   enum class Color : uint32_t {
     vt100Default = 0,
 
-    vt100Black = 0x1E,
-    vt100Red = 0x1F,
-    vt100Green = 0x20,
-    vt100Yellow = 0x21,
-    vt100Blue = 0x22,
-    vt100Magenta = 0x23,
-    vt100Cyan = 0x24,
-    vt100White = 0x25,
+    // Single attribute values - foreground colors
+    vt100Black   = 30,
+    vt100Red     = 31,
+    vt100Green   = 32,
+    vt100Yellow  = 33,
+    vt100Blue    = 34,
+    vt100Magenta = 35,
+    vt100Cyan    = 36,
+    vt100White   = 37,
 
-    vt100DarkRed = 0x021F,
-    vt100DarkGreen = 0x0220,
-    vt100DarkYellow = 0x0221,
-    vt100DarkBlue = 0x0222,
-    vt100DarkMagenta = 0x0223,
-    vt100DarkCyan = 0x0224,
-    vt100Gray = 0x0225,
-  };
-    
-  Tile(char glyph = 0, Color color = Color::vt100Default) {
-    _tileBytes = (glyph & 0xFF) | (static_cast<uint32_t>(color) << 8);
+    // Two attribute values - dim + foreground colors
+    vt100DarkRed     = (2 << 6) | 31,
+    vt100DarkGreen   = (2 << 6) | 32,
+    vt100DarkYellow  = (2 << 6) | 33,
+    vt100DarkBlue    = (2 << 6) | 34,
+    vt100DarkMagenta = (2 << 6) | 35,
+    vt100DarkCyan    = (2 << 6) | 36,
+    vt100Gray        = (2 << 6) | 37,
   };
 
-  char glyph() const { return _tileBytes & 0xFF; }
-  Color color() const { return Color(_tileBytes >> 8); }
 
-  bool operator==(const Tile &);
+  Tile(const Tile &tile);
+
+  Tile(char glyph = 0, Color color = Color::vt100Default);
+
+  char glyph() const;
+  Color color() const;
+
+  bool operator== (const Tile &rhs);
+  bool operator!= (const Tile &rhs);
 
   friend GameBoard;
 
 private:
-  uint32_t _tileBytes;
+  uint32_t _4bytes;
+
+  Tile(const Tile &tile, bool dirty);
+  bool isDirty() const;
+
+  static void colorEnd(Color color);
+  static void colorStart(Color color);
 
   void draw(bool displayEmptyTiles = true) const;
-
-  // Used to bracket printing to stdout to draw in the specified color.
-  static void colorStart(Color color);
-  static void colorEnd(Color color);
 };
 
 
 class GameBoard {
 public:
-  GameBoard(unsigned width = 10, unsigned height = 10);
+  GameBoard(int width = 10, int height = 10);
   ~GameBoard();
 
-  unsigned width() const { return _width; };
-  unsigned height() const { return _height; };
+  int width() const { return _width; };
+  int height() const { return _height; };
 
   bool displayCoords() const { return _displayCoords; }
   void setDisplayCoords(bool displayCoords) { _displayCoords = displayCoords; }
 
   // Highlighted the specified row,col in the displayed coordinates.
   void setHighlightedCoords();
-  void setHighlightedCoords(unsigned row, unsigned col);
+  void setHighlightedCoords(int row, int col);
   void setHighlightedCoordsColor(Tile::Color color) { _highlightedCoordsColor = color; };
 
-  // VT100 mode uses color, special symbols, and escape squences to draw the board.
-  // For debugging, it may be useful to turn this off so that:
-  //  - Drawing will append to the console rather than first clearing it.
-  //  - Scrolling back will show previously drawn boards.
-  //  - Debug printing will be viewable.
-  bool useVT100Graphics() const { return _useVT100Graphics; }
-  void setUseVT100Graphics(bool useVT100Graphics) {
-    _useVT100Graphics = useVT100Graphics;
+  /* VT100 mode uses color, special symbols, and cursor control to draw the board in a fixed location in the console. For debugging, it may be useful to turn this off so that:
+  - Drawing will append to the console rather than first clearing it.
+  - Scrolling back will show previously drawn boards.
+  - Debug printing will be viewable.
+  */
+  bool vt100Mode() const { return _vt100Mode; }
+  void setVT100Mode(bool vt100Mode) {
+    _vt100Mode = vt100Mode;
   }
 
   // Displays a dot, instead of blank, for empty tiles.
@@ -85,22 +93,25 @@ public:
   // Clears the screen, then draws the tiles.
   void draw() const;
 
+  // Only draws the dirty tiles.
+  void update() const;
+
   // Messages are displayed below the board. Use newlines for multiple lines.
-  std::string message() const { return _message; }
-  void setMessage(std::string newMessage = "") { _message = newMessage; }
+  std::string message() const;
+  void setMessage(std::string newMessage = "");
 
   // Accessors for the board's tiles.
-  Tile tileAt(unsigned row, unsigned col) const;
-  void setTileAt(unsigned row, unsigned col, Tile tile);
-  void setTileAt(unsigned row, unsigned col, char glyph, Tile::Color color = Tile::Color::vt100Default);
+  Tile tileAt(int row, int col) const;
+  void setTileAt(int row, int col, Tile tile);
+  void setTileAt(int row, int col, char glyph, Tile::Color color = Tile::Color::vt100Default);
 
   // Convenience methods for setting tiles to empty.
+  void clearTileAt(int row, int col);
   void clearAllTiles();
-  void clearTileAt(unsigned row, unsigned col);
 
   // Glyph accessors provide an alternative to the tile accessors, for when you don't care about color.
-  char glyphAt(unsigned row, unsigned col) const;
-  void setGlyphAt(unsigned row, unsigned col, char glyph);
+  char glyphAt(int row, int col) const;
+  void setGlyphAt(int row, int col, char glyph);
 
   // Commands are generally just the character pressed, e.g. 'a', ' ', 'x'.
   // This enum provides constants representing special keys, e.g. the arrow keys - listed below.
@@ -128,30 +139,44 @@ public:
 
 private:
   bool _displayCoords = true;
-  bool _useVT100Graphics = true;
+  bool _vt100Mode = true;
   bool _displayEmptyTiles = true;
   bool _nethackKeyMode = false;
   bool _wasdKeyMode = false;
+  mutable unsigned _dirtyMessageLineCount = 0;
   unsigned _defaultTileGlyph = ' ';
   unsigned _defaultTileColor = 0;
-  unsigned _width;
-  unsigned _height;
-  unsigned _highlightedRow = std::numeric_limits<unsigned>::max();
-  unsigned _highlightedCol = std::numeric_limits<unsigned>::max();
+  int _width;
+  int _height;
+  int _highlightedRow = illegalCoord();
+  int _highlightedCol = illegalCoord();
+  mutable int _dirtyHighlightedRow = illegalCoord();
+  mutable int _dirtyHighlightedCol = illegalCoord();
   Tile::Color _highlightedCoordsColor = Tile::Color::vt100Blue;
   std::string _message;
   Tile *_tiles;
 
   void clearScreen() const;
+  void setDirtyOnAllTiles(bool dirty) const;
+
   void drawTop(bool showCoords) const;
   void drawBottom(bool showCoords) const;
-  void drawRow(unsigned row, bool showCoords) const;
+  void drawRow(int row, bool showCoords) const;
 
-  unsigned tileIndex(unsigned row, unsigned col) const;
-  Tile displayedTileAt(unsigned row, unsigned col) const;
+  void updateMessage() const;
+  void updateRowCoords(int row) const;
+  void updateColCoords(int row) const;
+  void updateHighlightedCoords() const;
+  void setHighlightedCoords_(int row, int col); 
 
-  void vt100EscStart() const;
-  void vt100EscEnd() const;
+  static int illegalCoord();
+  void rangeCheck(int row, int col) const;
+
+  unsigned tileIndex(int row, int col) const;
+  Tile displayedTileAt(int row, int col) const;
+
+  void vt100GraphicsEnd() const;
+  void vt100GraphicsStart() const;
 
   char topLeftCornerGlyph() const;
   char topRightCornerGlyph() const;

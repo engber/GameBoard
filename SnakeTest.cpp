@@ -12,26 +12,30 @@ struct SnakeNode {
   SnakeNode *next;
 };
 
-SnakeNode *NewHead(SnakeNode *snake, unsigned row, unsigned col) {
-  SnakeNode *newHead = new SnakeNode;
-  newHead->row = row;
-  newHead->col = col;
-  newHead->next = snake->next;
-  snake->next = newHead;
+SnakeNode *NewFirstNode(SnakeNode *head, unsigned row, unsigned col) {
+  SnakeNode *newNode = new SnakeNode;
+  newNode->row = row;
+  newNode->col = col;
+  newNode->next = head->next;
+  head->next = newNode;
 
-  return newHead;
+  return newNode;
 }
 
-void DeleteTail(SnakeNode *snake) {
-  SnakeNode *prevNode = snake;
+SnakeNode *RemoveLastNode(SnakeNode *head) {
+  // Returns, splices out, but does _not_ delete, the last node.
+  SnakeNode *result = nullptr;
+  SnakeNode *prevNode = head;
   SnakeNode *node = prevNode->next;
   
   while (node->next != nullptr) {
     prevNode = node;
     node = node->next;
   }
-  delete node;
+  result = node;
   prevNode->next = nullptr;
+
+  return result;
 }
 
 void SnakeTestMain() {
@@ -39,53 +43,55 @@ void SnakeTestMain() {
   bool gameOver = false;
   bool highlightCoords = true;
   int dr = 0;
-  int dc = -1;
+  int dc = 1;
 
-  GameBoard board(20, 20);
+  GameBoard board(40, 40);
+
+  ostringstream messageBuf;
+  messageBuf << "VT100:" << (board.vt100Mode() ? "on" : "off") << " ";
+  messageBuf << "Coords:" << (board.displayCoords() ? "on" : "off") << " ";
+  messageBuf << "HCoords:" << (highlightCoords ? "on" : "off") << " ";
+  messageBuf << "Dots:" << (board.displayEmptyTiles() ? "on" : "off") << " ";
+  messageBuf << "Nethack:" << (board.nethackKeyMode() ? "on" : "off") << " ";
+  messageBuf << "WASD:" << (board.wasdKeyMode() ? "on" : "off") << " ";
+  messageBuf << endl;
+  board.setMessage(messageBuf.str());
 
   SnakeNode *snake = new SnakeNode;
   snake->next = nullptr;
-  SnakeNode *snakeHead = NewHead(snake, 2, 10);
+  SnakeNode *firstNode = NewFirstNode(snake, 2, 2);
   for (unsigned i = 0; i < 6; ++i) {
-    snakeHead = NewHead(snake, snakeHead->row + dr, snakeHead->col + dc);
+    firstNode = NewFirstNode(snake, firstNode->row + dr, firstNode->col + dc);
   }
 
   cout << "Press Any Key to Start\n";
   board.nextCommandKey(0);
   
+  board.draw();
+
   while (!gameOver) {
-    char headGlyph = killed ? 'X' : '@';
-    board.clearAllTiles();
-    board.setTileAt(snakeHead->row, snakeHead->col, headGlyph, Tile::Color::vt100Red);
-    SnakeNode *node = snakeHead->next;
+    
+    char firstGlyph = killed ? 'X' : '@';
+    board.setTileAt(firstNode->row, firstNode->col, firstGlyph, Tile::Color::vt100Red);
+    SnakeNode *node = firstNode->next;
     while (node != nullptr) {
       board.setTileAt(node->row, node->col, 'o', Tile::Color::vt100Red);
       node = node->next;
     }
     
     if (highlightCoords) {
-      board.setHighlightedCoords(snakeHead->row, snakeHead->col);
+      board.setHighlightedCoords(firstNode->row, firstNode->col);
     } else {
       board.setHighlightedCoords();
     }
 
-    ostringstream messageBuf;
-    messageBuf << "VT100:" << (board.useVT100Graphics() ? "on" : "off") << " ";
-    messageBuf << "Coords:" << (board.displayCoords() ? "on" : "off") << " ";
-    messageBuf << "HCoords:" << (highlightCoords ? "on" : "off") << " ";
-    messageBuf << "Dots:" << (board.displayEmptyTiles() ? "on" : "off") << " ";
-    messageBuf << "Nethack:" << (board.nethackKeyMode() ? "on" : "off") << " ";
-    messageBuf << "WASD:" << (board.wasdKeyMode() ? "on" : "off") << " ";
-    messageBuf << endl;
-    board.setMessage(messageBuf.str());
-  
-    board.draw();
+    board.update();
 
     if (killed) {
       break;
     }
     
-    char cmd = board.nextCommandKey(4);
+    char cmd = board.nextCommandKey(1);
 
     switch (cmd) {
       case arrowUpKey:
@@ -117,7 +123,7 @@ void SnakeTestMain() {
         board.setNethackKeyMode(!board.nethackKeyMode());
         break;
       case 'V':
-        board.setUseVT100Graphics(!board.useVT100Graphics());
+        board.setVT100Mode(!board.vt100Mode());
         break;
       case 'W':
         board.setWASDKeyMode(!board.wasdKeyMode());
@@ -131,12 +137,14 @@ void SnakeTestMain() {
         break;
     }
 
-    int nextRow = snakeHead->row + dr;
-    int nextCol = snakeHead->col + dc;
+    int nextRow = firstNode->row + dr;
+    int nextCol = firstNode->col + dc;
     if (nextRow >= 0 && nextRow < board.height() && nextCol >= 0 && nextCol < board.width()) {
       if (board.glyphAt(nextRow, nextCol) == '\0') {
-        snakeHead = NewHead(snake, nextRow, nextCol);
-        DeleteTail(snake);
+        firstNode = NewFirstNode(snake, nextRow, nextCol);
+        SnakeNode *lastNode = RemoveLastNode(snake);
+        board.clearTileAt(lastNode->row, lastNode->col);
+        delete lastNode;
       } else {
         killed = true;
       }

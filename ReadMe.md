@@ -18,18 +18,20 @@ If you prefer, instead of using `clearAllTiles`, you can selectively update only
 
 ### CommandKeys
 
-`GameBoard` use _CommanKeys_, to represents keys the user presses when interacting with the `GameBoard`. _CommandKeys_ can be either a regular `char` (e.g. 'a' or 'B') or one of the `CommandKey` `enum` constants (e.g. `arrowUpKey` or `deleteKey`).
+`GameBoard` use _CommandKeys_, to represents keys the user presses when interacting with the `GameBoard`. _CommandKeys_ can be either a regular `char` (e.g. 'a' or 'B') or one of the `CommandKey` `enum` constants (e.g. `arrowUpKey` or `deleteKey`).
 
 `Gameboard`'s `nextCommandKey` method is used to determine which key the user presses. If `nextCommanKey` is passed a zero timeout it waits until the user to presses a key before returning it. When `nextCommanKey` is passed a non-zero timeout, if no key has been pressed it will stop wating, and return `noKey`.
 
 
 ### Tile
 
-The tile class is basically a wrapper for 4 bytes of data. One byte is the glyph (char) displayed. A glyph of 0 means the tile is empty. The remaining bytes hold one of the Color enum values.
+The Tile class is use to represent the contents of a position on the GameBoard. It specifies a glyph (char) and its color.
 
-The `Color` `enum` constants encode up to three VT100 attributes which determine how a character is displayed.
+The tile class is basically a wrapper for 4 bytes of data. The low byte is the glyph (char) displayed. A glyph of 0 means the tile is empty. The next 18 bits hold, up to three, Color enum values. Of the remaining 6 bits, the high bit is a private flag to mark tiles as dirty. The rest are currently unused.
 
-We currently have constants for the 8 VT100 colors, for the _dark_ colors (dim attribute + color), and for the default (no attributes).
+The `Color` `enum` constants encode, up to three, VT100 attributes which determine how a character is displayed.
+
+Currently there are constants for the 8 VT100 colors, for the _dark_ colors (dim attribute + color), and for the default (no attributes).
 
 
 ### Information On VT100 Terminal Programming:

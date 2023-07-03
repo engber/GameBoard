@@ -1,44 +1,68 @@
 #include "GameBoard.h"
 
-#include <algorithm>>
 #include <iostream>
 #include <sstream>
 
 using namespace std;
 
+string StatusLine(const GameBoard &board, bool highlightCoords, unsigned time) {
+  ostringstream messageBuf;
+  messageBuf << time << ": ";
+  messageBuf << "VT100:" << (board.vt100Mode() ? "on" : "off") << " ";
+  messageBuf << "Coords:" << (board.displayCoords() ? "on" : "off") << " ";
+  messageBuf << "HCoords:" << (highlightCoords ? "on" : "off") << " ";
+  messageBuf << "Dots:" << (board.displayEmptyTiles() ? "on" : "off") << " ";
+  messageBuf << "Nethack:" << (board.nethackKeyMode() ? "on" : "off") << " ";
+  messageBuf << "WASD:" << (board.wasdKeyMode() ? "on" : "off") << " ";
+
+  return messageBuf.str();
+}
+
 void GameBoardTestMain() {
   bool done = false;
   bool highlightCoords = true;
+  bool forceRedraw = true;
+  
   int myRow = 5;
   int myCol = 5;
+  int messageLineCount = 1;
+  unsigned time = 0;
   
   GameBoard board(20, 20);
 
   char cmd = noKey;
 
   while (!done) {
-    board.clearAllTiles();
     board.setTileAt(myRow, myCol, '@', Tile::Color::vt100Red);
+    
     if (highlightCoords) {
       board.setHighlightedCoords(myRow, myCol);
     } else {
       board.setHighlightedCoords();
     }
 
-    ostringstream messageBuf;
-    messageBuf << "VT100:" << (board.useVT100Graphics() ? "on" : "off") << " ";
-    messageBuf << "Coords:" << (board.displayCoords() ? "on" : "off") << " ";
-    messageBuf << "HCoords:" << (highlightCoords ? "on" : "off") << " ";
-    messageBuf << "Dots:" << (board.displayEmptyTiles() ? "on" : "off") << " ";
-    messageBuf << "Nethack:" << (board.nethackKeyMode() ? "on" : "off") << " ";
-    messageBuf << "WASD:" << (board.wasdKeyMode() ? "on" : "off") << " ";
-    messageBuf << endl;
-    board.setMessage(messageBuf.str());
-  
-    board.draw();
+    if (messageLineCount > 0) {
+      string message = StatusLine(board, highlightCoords, time);
+      for (unsigned i = 1; i < messageLineCount; ++i) {
+        message.append("\nblah blah blah");
+      }
+      board.setMessage(message);
+    } else {
+      board.setMessage();
+    }
 
-    cout << "command key: ";
-    GameBoard::printCommandKey(cmd);
+    if (forceRedraw) {
+      board.draw();
+      forceRedraw = false;
+    } else {
+      board.update();
+    }
+
+    board.clearTileAt(myRow, myCol);
+    ++time;
+
+    // cout << "command key: ";
+    // GameBoard::printCommandKey(cmd);
     
     cmd = board.nextCommandKey();
 
@@ -81,21 +105,33 @@ void GameBoardTestMain() {
         break;
       case 'C':
         board.setDisplayCoords(!board.displayCoords());
+        forceRedraw = true;
         break;
       case 'D':
         board.setDisplayEmptyTiles(!board.displayEmptyTiles());
+        forceRedraw = true;
         break;
       case 'H':
         highlightCoords = !highlightCoords;
+        forceRedraw = true;
         break;
       case 'N':
         board.setNethackKeyMode(!board.nethackKeyMode());
         break;
       case 'V':
-        board.setUseVT100Graphics(!board.useVT100Graphics());
+        board.setVT100Mode(!board.vt100Mode());
         break;
       case 'W':
         board.setWASDKeyMode(!board.wasdKeyMode());
+        break;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+        messageLineCount = cmd - '0';
         break;
       case 'q':
       case 'Q':
