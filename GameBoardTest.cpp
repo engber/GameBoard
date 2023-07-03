@@ -21,7 +21,6 @@ string StatusLine(const GameBoard &board, bool highlightCoords, unsigned time) {
 void GameBoardTestMain() {
   bool done = false;
   bool highlightCoords = true;
-  bool forceRedraw = true;
   
   int myRow = 5;
   int myCol = 5;
@@ -51,12 +50,7 @@ void GameBoardTestMain() {
       board.setMessage();
     }
 
-    if (forceRedraw) {
-      board.draw();
-      forceRedraw = false;
-    } else {
-      board.update();
-    }
+    board.draw();
 
     board.clearTileAt(myRow, myCol);
     ++time;
@@ -105,15 +99,12 @@ void GameBoardTestMain() {
         break;
       case 'C':
         board.setDisplayCoords(!board.displayCoords());
-        forceRedraw = true;
         break;
       case 'D':
         board.setDisplayEmptyTiles(!board.displayEmptyTiles());
-        forceRedraw = true;
         break;
       case 'H':
         highlightCoords = !highlightCoords;
-        forceRedraw = true;
         break;
       case 'N':
         board.setNethackKeyMode(!board.nethackKeyMode());

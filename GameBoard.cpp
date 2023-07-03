@@ -6,22 +6,44 @@
 #include <algorithm>
 #include <exception>
 #include <iostream>
+#include <limits>
 
 using namespace std;
 
-#if __cplusplus < 201703L
-// mse-evil - clamp added in C++17
-#define clamp(v, lo, hi) ((v < lo) ? lo : ((v > hi) ? hi : v))
-#endif
+enum : int {
+  kIllegalCoord = std::numeric_limits<int>::max(),
+};
 
 GameBoard::GameBoard(int width, int height) {
-  _width = clamp(width, 1, 100);
-  _height = clamp(height, 1, 100);
+  if (width < 0 || height < 0  || width > maxWidth || height > maxHeight) {
+    throw std::out_of_range("GameBoard:: width & height must be 1..50");
+  }
+  
+  _width = width;
+  _height = height;
   _tiles = new Tile[_width * _height]();
-  setDirtyOnAllTiles(true);
 }
 
 GameBoard::~GameBoard() { delete[] _tiles; }
+
+void GameBoard::setDisplayCoords(bool displayCoords) {
+  _redrawNeeded = true;
+  _displayCoords = displayCoords;
+}
+
+void GameBoard::setHighlightedCoordsColor(Tile::Color color) {
+  _redrawNeeded = true;
+  _highlightedCoordsColor = color;
+};
+
+void GameBoard::setVT100Mode(bool vt100Mode) {
+  _redrawNeeded = true;
+  _vt100Mode = vt100Mode;
+}
+void GameBoard::setDisplayEmptyTiles(bool displayEmptyTiles) {
+  _redrawNeeded = true;
+  _displayEmptyTiles = displayEmptyTiles;
+}
 
 string GameBoard::message() const {
   return _message;
@@ -34,12 +56,8 @@ void GameBoard::setMessage(string newMessage) {
   }
 }
 
-int GameBoard::illegalCoord() {
-  return std::numeric_limits<int>::max();
-}
-
 void GameBoard::rangeCheck(int row, int col) const {
-  if (row < 0 || col < 0 || row >= _width || col >= _height) {
+  if (row < 0 || col < 0 || row >= _height || col >= _width) {
     throw std::out_of_range("GameBoard:: illegal row or col");
   }
 }
@@ -100,14 +118,14 @@ void GameBoard::setDirtyOnAllTiles(bool dirty) const {
 
 void GameBoard::setHighlightedCoords_(int row, int col) {  
   if (_highlightedRow != row) {
-    if (_dirtyHighlightedRow == illegalCoord()) {
+    if (_dirtyHighlightedRow == kIllegalCoord) {
       _dirtyHighlightedRow = _highlightedRow;
     }
       _highlightedRow = row;
   }
 
   if (_highlightedCol != col) {
-    if (_dirtyHighlightedCol == illegalCoord()) {
+    if (_dirtyHighlightedCol == kIllegalCoord) {
       _dirtyHighlightedCol = _highlightedCol;
     }
     _highlightedCol = col;
@@ -120,7 +138,7 @@ void GameBoard::setHighlightedCoords(int row, int col) {
 }
 
 void GameBoard::setHighlightedCoords() {
-  setHighlightedCoords_(illegalCoord(), illegalCoord());
+  setHighlightedCoords_(kIllegalCoord, kIllegalCoord);
 };
 
 
@@ -138,45 +156,52 @@ void GameBoard::vt100GraphicsEnd() const {
   }
 }
 
-enum {
+enum : char {
   // A selection of VT100 graphics characters
-  vt100TLCorner = '\x6C',
-  vt100TRCorner = '\x6B',
-  vt100BLCorner = '\x6D',
-  vt100BRCorner = '\x6A',
-  vt100HLine = '\x71',
-  vt100VLine = '\x78',
+  kVT100TLCorner = '\x6C',
+  kVT100TRCorner = '\x6B',
+  kVT100BLCorner = '\x6D',
+  kVT100BRCorner = '\x6A',
+  kVT100HLine = '\x71',
+  kVT100VLine = '\x78',
 };
 
 char GameBoard::topLeftCornerGlyph() const {
-  return _vt100Mode ? vt100TLCorner : '+';
+  return _vt100Mode ? kVT100TLCorner : '+';
 }
 
 char GameBoard::topRightCornerGlyph() const {
-  return _vt100Mode ? vt100TRCorner : '+';
+  return _vt100Mode ? kVT100TRCorner : '+';
 }
 
 char GameBoard::bottomLeftCornerGlyph() const {
-  return _vt100Mode ? vt100BLCorner : '+';
+  return _vt100Mode ? kVT100BLCorner : '+';
 }
 
 char GameBoard::bottomRightCornerGlyph() const {
-  return _vt100Mode ? vt100BRCorner : '+';
+  return _vt100Mode ? kVT100BRCorner : '+';
 }
 
 char GameBoard::horizontalLineGlyph() const {
-  return _vt100Mode ? vt100HLine : '-';
+  return _vt100Mode ? kVT100HLine : '-';
 }
 
 char GameBoard::verticalLineGlyph() const {
-  return _vt100Mode ? vt100VLine : '|';
+  return _vt100Mode ? kVT100VLine : '|';
 }
 
-void GameBoard::clearScreen() const {
-  if (_vt100Mode) {
-    // Clear screen (\x1B[2J) _and_ position cursor at 0,0 (\x1B[0;0H).
-    cout << "\x1B[2J\x1B[0;0H";
+void GameBoard::draw() const {
+  if (_redrawNeeded || !_vt100Mode) {
+    redraw();
+    _redrawNeeded = false;
+  } else {
+    update();
   }
+}
+  
+void GameBoard::forceRedraw() const {
+  _redrawNeeded = true;
+  draw();
 }
 
 void GameBoard::drawTop(bool showCoords) const {
@@ -329,7 +354,14 @@ void GameBoard::drawRow(int row, bool showCoords) const {
   cout << endl;
 }
 
-void GameBoard::draw() const {
+void GameBoard::clearScreen() const {
+  if (_vt100Mode) {
+    // Clear screens (\x1B[2J) _and_ positions cursor at 0,0 (\x1B[0;0H).
+    cout << "\x1B[2J\x1B[0;0H";
+  }
+}
+
+void GameBoard::redraw() const {
   clearScreen();
 
   drawTop(_displayCoords);
@@ -346,8 +378,8 @@ void GameBoard::draw() const {
 
   setDirtyOnAllTiles(false);
   _dirtyMessageLineCount = 0;
-  _dirtyHighlightedRow = illegalCoord();
-  _dirtyHighlightedCol = illegalCoord();
+  _dirtyHighlightedRow = kIllegalCoord;
+  _dirtyHighlightedCol = kIllegalCoord;
 }
 
 void GameBoard::update() const {
@@ -429,25 +461,25 @@ void GameBoard::updateColCoords(int col) const {
 }
 
 void GameBoard::updateHighlightedCoords() const {  
-  if (_highlightedRow != illegalCoord() || _highlightedCol != illegalCoord()) {
+  if (_highlightedRow != kIllegalCoord || _highlightedCol != kIllegalCoord) {
     Tile::colorStart(_highlightedCoordsColor);
     updateRowCoords(_highlightedRow);
     updateColCoords(_highlightedCol);
     Tile::colorEnd(_highlightedCoordsColor);
   }
   
-  if (_dirtyHighlightedRow != illegalCoord()) {
+  if (_dirtyHighlightedRow != kIllegalCoord) {
     Tile::colorStart(Tile::Color::vt100Default);
     updateRowCoords(_dirtyHighlightedRow);
     Tile::colorEnd(Tile::Color::vt100Default);
-    _dirtyHighlightedRow = illegalCoord();
+    _dirtyHighlightedRow = kIllegalCoord;
   }
   
-  if (_dirtyHighlightedCol != illegalCoord()) {
+  if (_dirtyHighlightedCol != kIllegalCoord) {
     Tile::colorStart(Tile::Color::vt100Default);
     updateColCoords(_dirtyHighlightedCol);
     Tile::colorEnd(Tile::Color::vt100Default);
-    _dirtyHighlightedCol = illegalCoord();
+    _dirtyHighlightedCol = kIllegalCoord;
   }
 }
 
@@ -625,41 +657,41 @@ void GameBoard::printCommandKey(char cmd) {
 // dirty  attr0   attr1  attr2   glyph
 
 enum : uint32_t {
-  tileValueMask = 0x03FFFFFF,
-  tileGlyphMask = 0x000000FF,
-  tileColorMask = 0x03FFFF00,
-  tileDirtyMask = 0x80000000,
+  kTileValueMask = 0x03FFFFFF,
+  kTileGlyphMask = 0x000000FF,
+  kTileColorMask = 0x03FFFF00,
+  kTileDirtyMask = 0x80000000,
 };
 
 Tile::Tile(const Tile &tile) { _4bytes = tile._4bytes; }
 
 Tile::Tile(char glyph, Color color) {
-  _4bytes = (glyph & tileGlyphMask) | (static_cast<uint32_t>(color) << 8);
+  _4bytes = (glyph & kTileGlyphMask) | ((static_cast<uint32_t>(color) << 8) & kTileColorMask);
 };
 
 Tile::Tile(const Tile &tile, bool dirty) {
-  _4bytes = (tile._4bytes & tileValueMask) | (dirty ? tileDirtyMask : 0x0);
+  _4bytes = (tile._4bytes & kTileValueMask) | (dirty ? kTileDirtyMask : 0x0);
 }
 
 bool Tile::isDirty() const {
-  return _4bytes & tileDirtyMask;
+  return _4bytes & kTileDirtyMask;
 }
 
 char Tile::glyph() const {
-  return _4bytes & tileGlyphMask;
+  return _4bytes & kTileGlyphMask;
 }
 
 Tile::Color Tile::color() const {
-  return Color((_4bytes & tileColorMask) >> 8);
+  return Color((_4bytes & kTileColorMask) >> 8);
 }
 
 // Compare the lower 26 bits.
 bool Tile::operator== (const Tile &rhs) {
-  return (this->_4bytes & tileValueMask) == (rhs._4bytes & tileValueMask);
+  return (this->_4bytes & kTileValueMask) == (rhs._4bytes & kTileValueMask);
 }
 
 bool Tile::operator!= (const Tile &rhs) {
-  return (this->_4bytes & tileValueMask) != (rhs._4bytes & tileValueMask);
+  return (this->_4bytes & kTileValueMask) != (rhs._4bytes & kTileValueMask);
 }
 
 // Use colorStart/colorEnd to bracket printing to stdout to draw in the specified color.

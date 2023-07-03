@@ -1,4 +1,3 @@
-#include <limits>
 #include <cstdint>
 #include <string>
 
@@ -60,6 +59,12 @@ private:
 
 class GameBoard {
 public:
+
+enum {
+  maxWidth = 50,
+  maxHeight = 50,
+};
+
   GameBoard(int width = 10, int height = 10);
   ~GameBoard();
 
@@ -67,34 +72,28 @@ public:
   int height() const { return _height; };
 
   bool displayCoords() const { return _displayCoords; }
-  void setDisplayCoords(bool displayCoords) { _displayCoords = displayCoords; }
+  void setDisplayCoords(bool displayCoords);
 
   // Highlighted the specified row,col in the displayed coordinates.
   void setHighlightedCoords();
   void setHighlightedCoords(int row, int col);
-  void setHighlightedCoordsColor(Tile::Color color) { _highlightedCoordsColor = color; };
+  void setHighlightedCoordsColor(Tile::Color color);
 
-  /* VT100 mode uses color, special symbols, and cursor control to draw the board in a fixed location in the console. For debugging, it may be useful to turn this off so that:
-  - Drawing will append to the console rather than first clearing it.
+  /* VT100 mode uses color, special symbols, and cursor control to draw the board
+  at a fixed location in the console. For debugging, it may be useful to turn this off so that:
+  - Drawing appends to the console rather than drawing in a fixed location.
   - Scrolling back will show previously drawn boards.
-  - Debug printing will be viewable.
+  - Debug printing messages will be more easily viewable.
   */
   bool vt100Mode() const { return _vt100Mode; }
-  void setVT100Mode(bool vt100Mode) {
-    _vt100Mode = vt100Mode;
-  }
+  void setVT100Mode(bool vt100Mode);
 
   // Displays a dot, instead of blank, for empty tiles.
   bool displayEmptyTiles() const { return _displayEmptyTiles; }
-  void setDisplayEmptyTiles(bool displayEmptyTiles) {
-    _displayEmptyTiles = displayEmptyTiles;
-  }
+  void setDisplayEmptyTiles(bool displayEmptyTiles);
 
-  // Clears the screen, then draws the tiles.
   void draw() const;
-
-  // Only draws the dirty tiles.
-  void update() const;
+  void forceRedraw() const;
 
   // Messages are displayed below the board. Use newlines for multiple lines.
   std::string message() const;
@@ -138,26 +137,30 @@ public:
   void setWASDKeyMode(bool wasdKeyMode) { _wasdKeyMode = wasdKeyMode; }
 
 private:
-  bool _displayCoords = true;
   bool _vt100Mode = true;
-  bool _displayEmptyTiles = true;
-  bool _nethackKeyMode = false;
   bool _wasdKeyMode = false;
+  bool _displayCoords = true;
+  bool _nethackKeyMode = false;
+  bool _displayEmptyTiles = true;
+  mutable bool _redrawNeeded = true;
   mutable unsigned _dirtyMessageLineCount = 0;
   unsigned _defaultTileGlyph = ' ';
   unsigned _defaultTileColor = 0;
   int _width;
   int _height;
-  int _highlightedRow = illegalCoord();
-  int _highlightedCol = illegalCoord();
-  mutable int _dirtyHighlightedRow = illegalCoord();
-  mutable int _dirtyHighlightedCol = illegalCoord();
+  int _highlightedRow;
+  int _highlightedCol;
+  mutable int _dirtyHighlightedRow;
+  mutable int _dirtyHighlightedCol;
   Tile::Color _highlightedCoordsColor = Tile::Color::vt100Blue;
   std::string _message;
   Tile *_tiles;
 
   void clearScreen() const;
   void setDirtyOnAllTiles(bool dirty) const;
+
+  void redraw() const;
+  void update() const;
 
   void drawTop(bool showCoords) const;
   void drawBottom(bool showCoords) const;
@@ -169,7 +172,6 @@ private:
   void updateHighlightedCoords() const;
   void setHighlightedCoords_(int row, int col); 
 
-  static int illegalCoord();
   void rangeCheck(int row, int col) const;
 
   unsigned tileIndex(int row, int col) const;

@@ -67,8 +67,6 @@ void SnakeTestMain() {
   cout << "Press Any Key to Start\n";
   board.nextCommandKey(0);
   
-  board.draw();
-
   while (!gameOver) {
     
     char firstGlyph = killed ? 'X' : '@';
@@ -85,13 +83,13 @@ void SnakeTestMain() {
       board.setHighlightedCoords();
     }
 
-    board.update();
+    board.draw();
 
     if (killed) {
       break;
     }
     
-    char cmd = board.nextCommandKey(1);
+    char cmd = board.nextCommandKey(2);
 
     switch (cmd) {
       case arrowUpKey:
