@@ -116,7 +116,17 @@ void GameBoard::setDirtyOnAllTiles(bool dirty) const {
   }
 }
 
-void GameBoard::setHighlightedCoords_(int row, int col) {  
+void GameBoard::setHighlightedCoords_(int row, int col) {
+/* Setting new coords to be highlighted requires remember to previous coords
+so they can be redrawn un-highlighted. The data members, _dirtyHighlightedRow
+and _dirtyHighlightedCol are used to remember them. A value of kIllegalCoord
+indicate there is no previous coord to unhighlight. Redrawing will reset
+_dirtyHighlightedRow and _dirtyHighlightedCol to kIllegalCoord.
+
+Note: only set _dirtyHighlightedRow and _dirtyHighlightedCol once.
+When the highlighted coords are changed multiple times before redrawing,
+we only need to handle the _first_ set of previous coords.
+ */
   if (_highlightedRow != row) {
     if (_dirtyHighlightedRow == kIllegalCoord) {
       _dirtyHighlightedRow = _highlightedRow;

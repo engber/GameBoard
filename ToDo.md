@@ -2,7 +2,7 @@
 
 ## Features
 
-### Break ReadMe up in user section, implementation section
+### ReadMe needs more details an examples.
 
 
 ## Issues
