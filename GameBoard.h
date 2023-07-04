@@ -89,8 +89,8 @@ enum {
   void setVT100Mode(bool vt100Mode);
 
   // Displays a dot, instead of blank, for empty tiles.
-  bool displayEmptyTiles() const { return _displayEmptyTiles; }
-  void setDisplayEmptyTiles(bool displayEmptyTiles);
+  bool displayEmptyTileDots() const { return _displayEmptyTileDots; }
+  void setDisplayEmptyTileDots(bool displayEmptyTileDots);
 
   void draw() const;
   void forceRedraw() const;
@@ -105,8 +105,8 @@ enum {
   void setTileAt(int row, int col, char glyph, Tile::Color color = Tile::Color::vt100Default);
 
   // Convenience methods for setting tiles to empty.
-  void clearTileAt(int row, int col);
   void clearAllTiles();
+  void clearTileAt(int row, int col);
 
   // Glyph accessors provide an alternative to the tile accessors, for when you don't care about color.
   char glyphAt(int row, int col) const;
@@ -141,7 +141,7 @@ private:
   bool _wasdKeyMode = false;
   bool _displayCoords = true;
   bool _nethackKeyMode = false;
-  bool _displayEmptyTiles = true;
+  bool _displayEmptyTileDots = true;
   mutable bool _redrawNeeded = true;
   mutable unsigned _dirtyMessageLineCount = 0;
   unsigned _defaultTileGlyph = ' ';

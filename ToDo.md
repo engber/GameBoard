@@ -2,7 +2,9 @@
 
 ## Features
 
-### ReadMe needs more details an examples.
+### Get rid of vt100 prefix on colors?
+
+### ReadMe needs more details and examples.
 
 
 ## Issues

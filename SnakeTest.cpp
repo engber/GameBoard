@@ -51,7 +51,7 @@ void SnakeTestMain() {
   messageBuf << "VT100:" << (board.vt100Mode() ? "on" : "off") << " ";
   messageBuf << "Coords:" << (board.displayCoords() ? "on" : "off") << " ";
   messageBuf << "HCoords:" << (highlightCoords ? "on" : "off") << " ";
-  messageBuf << "Dots:" << (board.displayEmptyTiles() ? "on" : "off") << " ";
+  messageBuf << "Dots:" << (board.displayEmptyTileDots() ? "on" : "off") << " ";
   messageBuf << "Nethack:" << (board.nethackKeyMode() ? "on" : "off") << " ";
   messageBuf << "WASD:" << (board.wasdKeyMode() ? "on" : "off") << " ";
   messageBuf << endl;
@@ -112,7 +112,7 @@ void SnakeTestMain() {
         board.setDisplayCoords(!board.displayCoords());
         break;
       case 'D':
-        board.setDisplayEmptyTiles(!board.displayEmptyTiles());
+        board.setDisplayEmptyTileDots(!board.displayEmptyTileDots());
         break;
       case 'H':
         highlightCoords = !highlightCoords;

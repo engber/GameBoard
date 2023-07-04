@@ -18,9 +18,14 @@ GameBoard::GameBoard(int width, int height) {
   if (width < 0 || height < 0  || width > maxWidth || height > maxHeight) {
     throw std::out_of_range("GameBoard:: width & height must be 1..50");
   }
-  
   _width = width;
   _height = height;
+
+  _highlightedRow = kIllegalCoord;
+  _highlightedCol = kIllegalCoord;
+  _dirtyHighlightedRow = kIllegalCoord;
+  _dirtyHighlightedCol = kIllegalCoord;
+  
   _tiles = new Tile[_width * _height]();
 }
 
@@ -40,9 +45,9 @@ void GameBoard::setVT100Mode(bool vt100Mode) {
   _redrawNeeded = true;
   _vt100Mode = vt100Mode;
 }
-void GameBoard::setDisplayEmptyTiles(bool displayEmptyTiles) {
+void GameBoard::setDisplayEmptyTileDots(bool displayEmptyTileDots) {
   _redrawNeeded = true;
-  _displayEmptyTiles = displayEmptyTiles;
+  _displayEmptyTileDots = displayEmptyTileDots;
 }
 
 string GameBoard::message() const {
@@ -335,14 +340,14 @@ void GameBoard::drawRow(int row, bool showCoords) const {
   vt100GraphicsStart();
   cout << verticalLineGlyph();
 
-  displayedTileAt(row, 0).draw(_displayEmptyTiles);
+  displayedTileAt(row, 0).draw(_displayEmptyTileDots);
   for (int c = 1; c < _width; c++) {
     cout << ' '; // a space between cols makes the board appear more "square."
     Tile tile = displayedTileAt(row, c);
 
     // Escape mode interprets chars as special vt100 graphic glyphs.
     vt100GraphicsEnd();
-    tile.draw(_displayEmptyTiles);
+    tile.draw(_displayEmptyTileDots);
     vt100GraphicsStart();
   }
   cout << verticalLineGlyph();
@@ -407,7 +412,7 @@ void GameBoard::update() const {
         int vt100Col = 2 * c + 2 + vt100CoordOffset;
         printf("\x1B[%d;%dH", vt100Row, vt100Col); // position cursor
 
-        tile.draw(_displayEmptyTiles);
+        tile.draw(_displayEmptyTileDots);
 
         _tiles[tileIndex] = Tile(tile, false);
       }
@@ -733,7 +738,7 @@ void Tile::colorEnd(Color color) {
   }
 }
 
-void Tile::draw(bool displayEmptyTiles) const {
+void Tile::draw(bool displayEmptyTileDots) const {
   // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
   char tileChar = glyph();
 
@@ -742,7 +747,7 @@ void Tile::draw(bool displayEmptyTiles) const {
     colorStart(tileColor);
     cout << tileChar;
     colorEnd(tileColor);
-  } else if (displayEmptyTiles) {
+  } else if (displayEmptyTileDots) {
     cout << "\x1B[2m•\x1B[0m"; // dim, dot, reset
   } else {
     cout << ' ';
