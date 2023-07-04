@@ -21,7 +21,7 @@ public:
     vt100Cyan    = 36,
     vt100White   = 37,
 
-    // Two attribute values - dim + foreground colors
+    // Two attribute values - dim + foreground color
     vt100DarkRed     = (2 << 6) | 31,
     vt100DarkGreen   = (2 << 6) | 32,
     vt100DarkYellow  = (2 << 6) | 33,
@@ -30,7 +30,6 @@ public:
     vt100DarkCyan    = (2 << 6) | 36,
     vt100Gray        = (2 << 6) | 37,
   };
-
 
   Tile(const Tile &tile);
 
@@ -74,41 +73,29 @@ enum {
   bool displayCoords() const { return _displayCoords; }
   void setDisplayCoords(bool displayCoords);
 
-  // Highlighted the specified row,col in the displayed coordinates.
   void setHighlightedCoords();
   void setHighlightedCoords(int row, int col);
   void setHighlightedCoordsColor(Tile::Color color);
 
-  /* VT100 mode uses color, special symbols, and cursor control to draw the board
-  at a fixed location in the console. For debugging, it may be useful to turn this off so that:
-  - Drawing appends to the console rather than drawing in a fixed location.
-  - Scrolling back will show previously drawn boards.
-  - Debug printing messages will be more easily viewable.
-  */
   bool vt100Mode() const { return _vt100Mode; }
   void setVT100Mode(bool vt100Mode);
 
-  // Displays a dot, instead of blank, for empty tiles.
   bool displayEmptyTileDots() const { return _displayEmptyTileDots; }
   void setDisplayEmptyTileDots(bool displayEmptyTileDots);
 
   void draw() const;
   void forceRedraw() const;
 
-  // Messages are displayed below the board. Use newlines for multiple lines.
   std::string message() const;
   void setMessage(std::string newMessage = "");
 
-  // Accessors for the board's tiles.
   Tile tileAt(int row, int col) const;
   void setTileAt(int row, int col, Tile tile);
   void setTileAt(int row, int col, char glyph, Tile::Color color = Tile::Color::vt100Default);
 
-  // Convenience methods for setting tiles to empty.
   void clearAllTiles();
   void clearTileAt(int row, int col);
 
-  // Glyph accessors provide an alternative to the tile accessors, for when you don't care about color.
   char glyphAt(int row, int col) const;
   void setGlyphAt(int row, int col, char glyph);
 
@@ -122,7 +109,6 @@ enum {
   // until giving up and returning noKey.
   char nextCommandKey(unsigned timeout = 0);
 
-  // Prints a command to stdout to help with debugging.
   static void printCommandKey(char cmd);
 
   // Nethack mode interprets the nethack movement keys as arrow keys.
