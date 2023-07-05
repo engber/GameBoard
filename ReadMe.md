@@ -1,7 +1,9 @@
 
 # Introduction
 
-GameBoard.h/GameBoard.cpp provides the `GameBoard` and `Tile` classes which visually display a grid of characters. Additionally, `GameBoard` also provides a method to read user keystrokes.
+GameBoard.h/GameBoard.cpp provides the `GameBoard` and `Tile` classes which visually display a grid of characters in the console. Additionally, `GameBoard` also provides a method to read user keystrokes in the console.
+
+Currently, this is being devloped/tested for the console in [Replit](https://replict.com) but, in principle, it should work other consoles that supports VT100 escape codes.
 
 
 # GameBoard
