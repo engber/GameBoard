@@ -25,7 +25,7 @@ GameBoard::GameBoard(int width, int height) {
   _highlightedCol = kIllegalCoord;
   _dirtyHighlightedRow = kIllegalCoord;
   _dirtyHighlightedCol = kIllegalCoord;
-  _highlightedCoordsColor  = Tile::Color::vt100Blue;
+  _highlightedCoordsColor  = Tile::Color::blue;
   
   _tiles = new Tile[_width * _height]();
 }
@@ -99,7 +99,7 @@ char GameBoard::glyphAt(int row, int col) const {
 }
 
 void GameBoard::setGlyphAt(int row, int col, char glyph) {
-  setTileAt(row, col, Tile(glyph, Tile::Color::vt100White));
+  setTileAt(row, col, Tile(glyph, Tile::Color::white));
 }
 
 void GameBoard::clearAllTiles() {
@@ -485,16 +485,16 @@ void GameBoard::updateHighlightedCoords() const {
   }
   
   if (_dirtyHighlightedRow != kIllegalCoord) {
-    Tile::colorStart(Tile::Color::vt100Default);
+    Tile::colorStart(Tile::Color::defaultColor);
     updateRowCoords(_dirtyHighlightedRow);
-    Tile::colorEnd(Tile::Color::vt100Default);
+    Tile::colorEnd(Tile::Color::defaultColor);
     _dirtyHighlightedRow = kIllegalCoord;
   }
   
   if (_dirtyHighlightedCol != kIllegalCoord) {
-    Tile::colorStart(Tile::Color::vt100Default);
+    Tile::colorStart(Tile::Color::defaultColor);
     updateColCoords(_dirtyHighlightedCol);
-    Tile::colorEnd(Tile::Color::vt100Default);
+    Tile::colorEnd(Tile::Color::defaultColor);
     _dirtyHighlightedCol = kIllegalCoord;
   }
 }
@@ -688,7 +688,7 @@ Tile::Tile(char glyph, Tile::Color color) {
   _4bytes = (glyph & kTileGlyphMask) | ((static_cast<uint32_t>(color) << 8) & kTileColorMask);
 };
 
-Tile::Tile(char glyph) : Tile::Tile(glyph, Color::vt100Default) {}
+Tile::Tile(char glyph) : Tile::Tile(glyph, Color::defaultColor) {}
 
 Tile::Tile(const Tile &tile, bool dirty) {
   _4bytes = (tile._4bytes & kTileValueMask) | (dirty ? kTileDirtyMask : 0x0);
@@ -718,7 +718,7 @@ bool Tile::operator!= (const Tile &rhs) {
 // Use colorStart/colorEnd to bracket printing to stdout to draw in the specified color.
 
 void Tile::colorStart(Color color) {
-  if (color != Color::vt100Default) {
+  if (color != Color::defaultColor) {
     cout << "\x1B[";
 
     uint32_t colorBytes = static_cast<uint32_t>(color);
@@ -739,7 +739,7 @@ void Tile::colorStart(Color color) {
 }
 
 void Tile::colorEnd(Color color) {
-  if (color != Color::vt100Default) {
+  if (color != Color::defaultColor) {
     cout << "\x1B[0m"; // reset attributes
   }
 }

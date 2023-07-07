@@ -190,24 +190,21 @@ enum GameBoard::CommandKey : char {
 // Colors encode up to 3, 6-bit attribute values.
 
 enum class Tile::Color : uint32_t {
-  vt100Default = 0,
+  defaultColor = 0,
 
   // Single attribute values - foreground colors
-  vt100Black   = 30,
-  vt100Red     = 31,
-  vt100Green   = 32,
-  vt100Yellow  = 33,
-  vt100Blue    = 34,
-  vt100Magenta = 35,
-  vt100Cyan    = 36,
-  vt100White   = 37,
+  black   = 30,
+  red     = 31,
+  green   = 32,
+  yellow  = 33,
+  blue    = 34,
+  magenta = 35,
+  cyan    = 36,
+  white   = 37,
 
   // Two attribute values - dim + foreground color
-  vt100DarkRed     = (2 << 6) | 31,
-  vt100DarkGreen   = (2 << 6) | 32,
-  vt100DarkYellow  = (2 << 6) | 33,
-  vt100DarkBlue    = (2 << 6) | 34,
-  vt100DarkMagenta = (2 << 6) | 35,
-  vt100DarkCyan    = (2 << 6) | 36,
-  vt100Gray        = (2 << 6) | 37,
+  // Only works for _some_ colors.
+  darkRed     = (2 << 6) | 31,
+  darkBlue    = (2 << 6) | 34,
+  gray        = (2 << 6) | 37, // dark white
 };

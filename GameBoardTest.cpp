@@ -32,7 +32,7 @@ void GameBoardTestMain() {
   char cmd = noKey;
 
   while (!done) {
-    board.setTileAt(myRow, myCol, '@', Tile::Color::vt100Red);
+    board.setTileAt(myRow, myCol, '@', Tile::Color::red);
     
     if (highlightCoords) {
       board.setHighlightedCoords(myRow, myCol);
