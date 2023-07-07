@@ -25,6 +25,7 @@ GameBoard::GameBoard(int width, int height) {
   _highlightedCol = kIllegalCoord;
   _dirtyHighlightedRow = kIllegalCoord;
   _dirtyHighlightedCol = kIllegalCoord;
+  _highlightedCoordsColor  = Tile::Color::vt100Blue;
   
   _tiles = new Tile[_width * _height]();
 }
@@ -666,6 +667,9 @@ void GameBoard::printCommandKey(char cmd) {
 #undef NAMED_KEY_CASE
 }
 
+/*****************************************************************************/
+/*****************************************************************************/
+
 // Tiles encode in the lower 26 bits: 3, 6-bit attribute values, and a 8-bit char/glyph.
 // The upper 6 bits are private - the high bit is used by GameBoard to mark the tile dirty.
 // DXXX XX00 0000 1111 1122 2222 GGGG GGGG
@@ -680,9 +684,11 @@ enum : uint32_t {
 
 Tile::Tile(const Tile &tile) { _4bytes = tile._4bytes; }
 
-Tile::Tile(char glyph, Color color) {
+Tile::Tile(char glyph, Tile::Color color) {
   _4bytes = (glyph & kTileGlyphMask) | ((static_cast<uint32_t>(color) << 8) & kTileColorMask);
 };
+
+Tile::Tile(char glyph) : Tile::Tile(glyph, Color::vt100Default) {}
 
 Tile::Tile(const Tile &tile, bool dirty) {
   _4bytes = (tile._4bytes & kTileValueMask) | (dirty ? kTileDirtyMask : 0x0);
@@ -738,6 +744,7 @@ void Tile::colorEnd(Color color) {
   }
 }
 
+// Called only by GameBoard to draw at the current cursor.
 void Tile::draw(bool displayEmptyTileDots) const {
   // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
   char tileChar = glyph();

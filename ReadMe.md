@@ -5,6 +5,29 @@ GameBoard.h/GameBoard.cpp provides the `GameBoard` and `Tile` classes which visu
 
 Currently, this is being devloped/tested for the console in [Replit](https://replict.com) but, in principle, it should work other consoles that supports VT100 escape codes.
 
+# Basic Usage
+
+```
+  GameBoard board(20, 15);
+
+  bool done = false;
+  int row = 5, col = 3;
+  while (!done) {
+    // Sets a char at a position with a color.
+    board.setTileAt(row, col, '@', Tile::Color::vt100DarkMagenta);
+    // Draws all tiles, or all that changed since the last draw().
+    board.draw();
+
+    // Erases the tile at row, col (providing the illusion of motion).
+    board.clearTileAt(row, col);
+    // The board can answer its height and width.
+    row = (row + 1) % board.height();
+    col = (col + 1) % board.width();
+    // Wait 0.2s for user input (the param / 10 seconds).
+    char cmd = board.nextCommandKey(2);
+    done = cmd == 'q' || cmd == 'Q';
+  }
+```
 
 # GameBoard
 
@@ -16,6 +39,8 @@ The simplest usage pattern is to have a main loop draw the board each round:
   1. Use `setTileAt` to place tiles at the desired locations.
   2. Call `draw` to display the board.
   3. Call `nextCommandKey` to determine what to do next.
+
+
 
 ## Tile
 

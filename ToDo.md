@@ -2,10 +2,11 @@
 
 ## Features
 
-### Get rid of vt100 prefix on colors?
+### Get rid of vt100 prefix on colors.
 
-### ReadMe needs more details and examples.
+### Dark colors don't seem to show up.
 
+### Define Tile(glph) to get rid of default parameter. Move color enum down in file.
 
 ## Issues
 
