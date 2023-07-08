@@ -42,9 +42,11 @@ The simplest usage pattern is to have a main loop draw the board each round:
 
 
 
-## Tile
+## Tiles & Colors
 
-The `Tile` class represents the contents of a position on a `GameBoard`. It specifies a glyph (`char`) and its color. `Tile` defines `Color` `enum` constants (e.g. `Tile::Color::vt100Blue`) which are used to specify the color of a `Tile`.
+The `Tile` class represents the contents of a position on a `GameBoard`. It specifies a glyph (`char`) and its color.
+
+Colors are specified using the `Color` `enum` constants (e.g. `Color::blue`).
 
 `Tile` defines the `color()` and `glyph()` methods, but there are no corresponding setter methods. Tiles are immutable; instead of modifying a tile, create a new one using a diffrent color or glyph.
 
@@ -71,7 +73,7 @@ The `forceRedraw` method _always_ clears the console and draws the board. This m
 
 `Tile tileAt(int row, int col) const;`  
 `void setTileAt(int row, int col, Tile tile);`  
-`void setTileAt(int row, int col, char glyph, Tile::Color color = Tile::Color::vt100Default);`  
+`void setTileAt(int row, int col, char glyph, Color color);`  
 These methods place characters on the board.
 
 
@@ -137,19 +139,7 @@ WASD mode interprets the w, a, s, d keys as arrow keys.
   - `w` = up, `a` = left, `s` = down, `r` = right
 
 
-# Implementation Notes
-
-## Tile
-
-The tile class is basically a wrapper for 4 bytes of data. The low byte is the glyph (char) displayed. A glyph of 0 means the tile is empty. The next 18 bits hold, up to three, Color enum values. Of the remaining 6 bits, the high bit is a private flag to mark tiles as dirty. The rest are currently unused.
-
-## Color
-
-The `Color` `enum` constants encode, up to three, VT100 attributes which determine how a character is displayed.
-
-Currently there are constants for the 8 VT100 colors, for the _dark_ colors (dim attribute + color), and for the default (no attributes).
-
-## Information On VT100 Terminal Programming:
+# Information On VT100 Terminal Programming:
 
 Convential printing to `stdout` just prints a sequence of single color characters to the console which scroll towards the bottom.
 
