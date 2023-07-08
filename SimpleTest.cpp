@@ -12,7 +12,7 @@ void SimpleTestMain() {
   int row = 5, col = 3;
   while (!done) {
     // Sets a char at a position with a color.
-    board.setTileAt(row, col, '@', Tile::Color::magenta);
+    board.setTileAt(row, col, '@', Color::magenta);
     // Draws all tiles, or all that changed since the last draw().
     board.draw();
 

@@ -25,7 +25,7 @@ GameBoard::GameBoard(int width, int height) {
   _highlightedCol = kIllegalCoord;
   _dirtyHighlightedRow = kIllegalCoord;
   _dirtyHighlightedCol = kIllegalCoord;
-  _highlightedCoordsColor  = Tile::Color::blue;
+  _highlightedCoordsColor  = Color::blue;
   
   _tiles = new Tile[_width * _height]();
 }
@@ -37,7 +37,7 @@ void GameBoard::setDisplayCoords(bool displayCoords) {
   _displayCoords = displayCoords;
 }
 
-void GameBoard::setHighlightedCoordsColor(Tile::Color color) {
+void GameBoard::setHighlightedCoordsColor(Color color) {
   _redrawNeeded = true;
   _highlightedCoordsColor = color;
 };
@@ -89,8 +89,7 @@ void GameBoard::setTileAt(int row, int col, Tile tile) {
   }
 }
 
-void GameBoard::setTileAt(int row, int col, char glyph,
-                          Tile::Color color) {
+void GameBoard::setTileAt(int row, int col, char glyph, Color color) {
   setTileAt(row, col, Tile(glyph, color));
 }
 
@@ -99,7 +98,7 @@ char GameBoard::glyphAt(int row, int col) const {
 }
 
 void GameBoard::setGlyphAt(int row, int col, char glyph) {
-  setTileAt(row, col, Tile(glyph, Tile::Color::white));
+  setTileAt(row, col, Tile(glyph, Color::white));
 }
 
 void GameBoard::clearAllTiles() {
@@ -485,16 +484,16 @@ void GameBoard::updateHighlightedCoords() const {
   }
   
   if (_dirtyHighlightedRow != kIllegalCoord) {
-    Tile::colorStart(Tile::Color::defaultColor);
+    Tile::colorStart(Color::defaultColor);
     updateRowCoords(_dirtyHighlightedRow);
-    Tile::colorEnd(Tile::Color::defaultColor);
+    Tile::colorEnd(Color::defaultColor);
     _dirtyHighlightedRow = kIllegalCoord;
   }
   
   if (_dirtyHighlightedCol != kIllegalCoord) {
-    Tile::colorStart(Tile::Color::defaultColor);
+    Tile::colorStart(Color::defaultColor);
     updateColCoords(_dirtyHighlightedCol);
-    Tile::colorEnd(Tile::Color::defaultColor);
+    Tile::colorEnd(Color::defaultColor);
     _dirtyHighlightedCol = kIllegalCoord;
   }
 }
@@ -670,72 +669,43 @@ void GameBoard::printCommandKey(char cmd) {
 /*****************************************************************************/
 /*****************************************************************************/
 
-// Tiles encode in the lower 26 bits: 3, 6-bit attribute values, and a 8-bit char/glyph.
-// The upper 6 bits are private - the high bit is used by GameBoard to mark the tile dirty.
-// DXXX XX00 0000 1111 1122 2222 GGGG GGGG
-// dirty  attr0   attr1  attr2   glyph
-
-enum : uint32_t {
-  kTileValueMask = 0x03FFFFFF,
-  kTileGlyphMask = 0x000000FF,
-  kTileColorMask = 0x03FFFF00,
-  kTileDirtyMask = 0x80000000,
-};
-
-Tile::Tile(const Tile &tile) { _4bytes = tile._4bytes; }
-
-Tile::Tile(char glyph, Tile::Color color) {
-  _4bytes = (glyph & kTileGlyphMask) | ((static_cast<uint32_t>(color) << 8) & kTileColorMask);
-};
+Tile::Tile(char glyph, Color color) : _glyph(glyph), _color(color), _dirty(false) {}
 
 Tile::Tile(char glyph) : Tile::Tile(glyph, Color::defaultColor) {}
 
-Tile::Tile(const Tile &tile, bool dirty) {
-  _4bytes = (tile._4bytes & kTileValueMask) | (dirty ? kTileDirtyMask : 0x0);
+Tile::Tile(const Tile &tile, bool dirty) : Tile(tile) {
+  _dirty = dirty;
 }
 
-bool Tile::isDirty() const {
-  return _4bytes & kTileDirtyMask;
-}
-
-char Tile::glyph() const {
-  return _4bytes & kTileGlyphMask;
-}
-
-Tile::Color Tile::color() const {
-  return Color((_4bytes & kTileColorMask) >> 8);
-}
-
-// Compare the lower 26 bits.
 bool Tile::operator== (const Tile &rhs) {
-  return (this->_4bytes & kTileValueMask) == (rhs._4bytes & kTileValueMask);
+  return _glyph == rhs._glyph && _color == rhs._color;
 }
 
 bool Tile::operator!= (const Tile &rhs) {
-  return (this->_4bytes & kTileValueMask) != (rhs._4bytes & kTileValueMask);
+  return !(*this == rhs);
 }
 
 // Use colorStart/colorEnd to bracket printing to stdout to draw in the specified color.
 
 void Tile::colorStart(Color color) {
-  if (color != Color::defaultColor) {
-    cout << "\x1B[";
-
-    uint32_t colorBytes = static_cast<uint32_t>(color);
-    int color0 = 0x3F & (colorBytes >> 12);
-    int color1 = 0x3F & (colorBytes >> 6);
-    int color2 = 0x3F & colorBytes;
-
-    if (color0 != 0) {
-      cout << color0 << ';';
-    }
-
-    if (color1 != 0) {
-      cout << color1 << ';';
-    }
-
-    cout << color2 << 'm';
-  }
+  static const char *vt100ColorCodes[] = {
+  // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
+  
+  "\x1B[0m",    // default
+  "\x1B[30m",   // black
+  "\x1B[31m",   // red
+  "\x1B[32m",   // green
+  "\x1B[33m",   // yellow
+  "\x1B[34m",   // blue
+  "\x1B[35m",   // magenta
+  "\x1B[36m",   // cyan
+  "\x1B[37m",   // white
+  "\x1B[2;31m", // dark red
+  "\x1B[2;34m", // dark blue
+  "\x1B[2;37m", // dark white
+  };
+  
+  cout << vt100ColorCodes[color];
 }
 
 void Tile::colorEnd(Color color) {
@@ -746,14 +716,10 @@ void Tile::colorEnd(Color color) {
 
 // Called only by GameBoard to draw at the current cursor.
 void Tile::draw(bool displayEmptyTileDots) const {
-  // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
-  char tileChar = glyph();
-
-  if (tileChar != '\0') {
-    Color tileColor = color();
-    colorStart(tileColor);
-    cout << tileChar;
-    colorEnd(tileColor);
+  if (_glyph != '\0') {
+    colorStart(_color);
+    cout << _glyph;
+    colorEnd(_color);
   } else if (displayEmptyTileDots) {
     cout << "\x1B[2m•\x1B[0m"; // dim, dot, reset
   } else {

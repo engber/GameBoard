@@ -1,39 +1,7 @@
-#include <cstdint>
 #include <string>
 
-class GameBoard;
-
-/*****************************************************************************/
-/*****************************************************************************/
-
-class Tile {
-public:
-  enum class Color : uint32_t;
-
-  Tile(const Tile &tile);
-
-  Tile(char glyph, Color color);
-  Tile(char glyph = 0);
-
-  char glyph() const;
-  Color color() const;
-
-  bool operator== (const Tile &rhs);
-  bool operator!= (const Tile &rhs);
-
-  friend GameBoard;
-
-private:
-  uint32_t _4bytes;
-
-  Tile(const Tile &tile, bool dirty);
-  bool isDirty() const;
-
-  static void colorEnd(Color color);
-  static void colorStart(Color color);
-
-  void draw(bool displayEmptyTiles = true) const;
-};
+class Tile;
+enum Color : unsigned char;
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -57,7 +25,7 @@ enum {
 
   void setHighlightedCoords();
   void setHighlightedCoords(int row, int col);
-  void setHighlightedCoordsColor(Tile::Color color);
+  void setHighlightedCoordsColor(Color color);
 
   bool vt100Mode() const { return _vt100Mode; }
   void setVT100Mode(bool vt100Mode);
@@ -73,7 +41,7 @@ enum {
 
   Tile tileAt(int row, int col) const;
   void setTileAt(int row, int col, Tile tile);
-  void setTileAt(int row, int col, char glyph, Tile::Color color);
+  void setTileAt(int row, int col, char glyph, Color color);
 
   void clearAllTiles();
   void clearTileAt(int row, int col);
@@ -120,7 +88,7 @@ private:
   int _highlightedCol;
   mutable int _dirtyHighlightedRow;
   mutable int _dirtyHighlightedCol;
-  Tile::Color _highlightedCoordsColor;
+  Color _highlightedCoordsColor;
   std::string _message;
   Tile *_tiles;
 
@@ -187,24 +155,49 @@ enum GameBoard::CommandKey : char {
 /*****************************************************************************/
 /*****************************************************************************/
 
-// Colors encode up to 3, 6-bit attribute values.
+class Tile {
+public:
+  Tile(const Tile &tile) = default;
 
-enum class Tile::Color : uint32_t {
-  defaultColor = 0,
+  Tile(char glyph, Color color);
+  Tile(char glyph = 0);
 
-  // Single attribute values - foreground colors
-  black   = 30,
-  red     = 31,
-  green   = 32,
-  yellow  = 33,
-  blue    = 34,
-  magenta = 35,
-  cyan    = 36,
-  white   = 37,
+  char glyph() const { return _glyph; };
+  Color color() const { return _color; };
 
-  // Two attribute values - dim + foreground color
-  // Only works for _some_ colors.
-  darkRed     = (2 << 6) | 31,
-  darkBlue    = (2 << 6) | 34,
-  gray        = (2 << 6) | 37, // dark white
+  bool operator== (const Tile &rhs);
+  bool operator!= (const Tile &rhs);
+
+  friend GameBoard;
+
+private:
+  char _glyph;
+  Color _color;
+  bool _dirty;
+
+  Tile(const Tile &tile, bool dirty);
+  bool isDirty() const { return _dirty; };
+
+  static void colorEnd(Color color);
+  static void colorStart(Color color);
+
+  void draw(bool displayEmptyTiles = true) const;
+};
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+enum Color : unsigned char {
+  defaultColor,
+  black,
+  red,
+  green,
+  yellow,
+  blue,
+  magenta,
+  cyan,
+  white,
+  darkRed,
+  darkBlue,
+  gray, // dark white
 };

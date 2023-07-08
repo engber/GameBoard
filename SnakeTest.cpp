@@ -70,10 +70,10 @@ void SnakeTestMain() {
   while (!gameOver) {
     
     char firstGlyph = killed ? 'X' : '@';
-    board.setTileAt(firstNode->row, firstNode->col, firstGlyph, Tile::Color::red);
+    board.setTileAt(firstNode->row, firstNode->col, firstGlyph, Color::red);
     SnakeNode *node = firstNode->next;
     while (node != nullptr) {
-      board.setTileAt(node->row, node->col, 'o', Tile::Color::red);
+      board.setTileAt(node->row, node->col, 'o', Color::red);
       node = node->next;
     }
     
