@@ -1,3 +1,6 @@
+#ifndef __GAME_BOARD_H__
+#define __GAME_BOARD_H__
+
 #include <string>
 
 class Tile;
@@ -201,3 +204,5 @@ enum Color : unsigned char {
   darkBlue,
   gray, // dark white
 };
+
+#endif
