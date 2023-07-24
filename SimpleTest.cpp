@@ -14,7 +14,7 @@ void SimpleTestMain() {
     // Sets a char at a position with a color.
     board.setTileAt(row, col, '@', Color::magenta);
     // Draws all tiles, or all that changed since the last draw().
-    board.draw();
+    board.updateConsole();
 
     // Erases the tile at row, col (providing the illusion of motion).
     board.clearTileAt(row, col);

@@ -83,7 +83,7 @@ void SnakeTestMain() {
       board.setHighlightedCoords();
     }
 
-    board.draw();
+    board.updateConsole();
 
     if (killed) {
       break;

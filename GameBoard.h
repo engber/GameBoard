@@ -36,8 +36,8 @@ enum {
   bool displayEmptyTileDots() const { return _displayEmptyTileDots; }
   void setDisplayEmptyTileDots(bool displayEmptyTileDots);
 
-  void draw() const;
-  void forceRedraw() const;
+  void updateConsole() const;
+  void redrawConsole() const;
 
   std::string message() const;
   void setMessage(std::string newMessage = "");

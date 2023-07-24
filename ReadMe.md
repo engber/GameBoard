@@ -16,7 +16,7 @@ Currently, this is being devloped/tested for the console in [Replit](https://rep
     // Sets a char at a position with a color.
     board.setTileAt(row, col, '@', Tile::Color::vt100DarkMagenta);
     // Draws all tiles, or all that changed since the last draw().
-    board.draw();
+    board.updateConsole();
 
     // Erases the tile at row, col (providing the illusion of motion).
     board.clearTileAt(row, col);
@@ -37,7 +37,7 @@ The constants, `GameBoard::maxWidth` and `GameBoard::maxHeight`, specify the max
 
 The simplest usage pattern is to have a main loop draw the board each round:
   1. Use `setTileAt` to place tiles at the desired locations.
-  2. Call `draw` to display the board.
+  2. Call `updateConsole` to display the board.
   3. Call `nextCommandKey` to determine what to do next.
 
 
@@ -62,13 +62,13 @@ The `nextCommandKey` method returns the key a user pressed. The `timeout` parame
 
 ## GameBoard Methods
 
-`void draw()`  
-The first time the `draw` method is called it clears the console and draws the board.
-Subsequent will try to be _smart_, only drawing the parts that need updating, but some changes (e.g. turning on/off displaying coordinates) require a full redrawing, including clearing the console.
+`void updateConsole()`  
+The first time the `draw` method is called it clears the console and displays the board.
+Subsequent calls will try to be _smart_, only drawing the parts that need updating, but some changes (e.g. turning on/off displaying coordinates) require a full redrawing, including clearing the console.
 
 
-`void forceRedraw()`  
-The `forceRedraw` method _always_ clears the console and draws the board. This method may be helpful in debugging drawing problems; determining if the _smart_ update logic is the cause.
+`void redrawConsole()`  
+The `redrawConsole` method _always_ clears the console and draws the board. This method may be helpful in debugging drawing problems; determining if the _smart_ update logic is the cause.
 
 
 `Tile tileAt(int row, int col) const;`  

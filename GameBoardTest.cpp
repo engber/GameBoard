@@ -50,7 +50,7 @@ void GameBoardTestMain() {
       board.setMessage();
     }
 
-    board.draw();
+    board.updateConsole();
 
     board.clearTileAt(myRow, myCol);
     ++time;

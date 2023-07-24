@@ -205,7 +205,7 @@ char GameBoard::verticalLineGlyph() const {
   return _vt100Mode ? kVT100VLine : '|';
 }
 
-void GameBoard::draw() const {
+void GameBoard::updateConsole() const {
   if (_redrawNeeded || !_vt100Mode) {
     redraw();
     _redrawNeeded = false;
@@ -214,9 +214,9 @@ void GameBoard::draw() const {
   }
 }
   
-void GameBoard::forceRedraw() const {
+void GameBoard::redrawConsole() const {
   _redrawNeeded = true;
-  draw();
+  updateConsole();
 }
 
 void GameBoard::drawTop(bool showCoords) const {
