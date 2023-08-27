@@ -13,15 +13,15 @@ class GameBoard {
 public:
 
 enum {
-  maxWidth = 50,
-  maxHeight = 50,
+  maxRowCount = 50,
+  maxColCount = 50,
 };
 
-  GameBoard(int width = 10, int height = 10);
+  GameBoard(int rowCount = 10, int colCount = 10);
   ~GameBoard();
 
-  int width() const { return _width; };
-  int height() const { return _height; };
+  int rowCount() const { return _rowCount; };
+  int colCount() const { return _colCount; };
 
   bool displayCoords() const { return _displayCoords; }
   void setDisplayCoords(bool displayCoords);
@@ -85,8 +85,8 @@ private:
   mutable unsigned _dirtyMessageLineCount = 0;
   unsigned _defaultTileGlyph = ' ';
   unsigned _defaultTileColor = 0;
-  int _width;
-  int _height;
+  int _rowCount;
+  int _colCount;
   int _highlightedRow;
   int _highlightedCol;
   mutable int _dirtyHighlightedRow;

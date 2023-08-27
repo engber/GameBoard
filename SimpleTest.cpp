@@ -19,8 +19,8 @@ void SimpleTestMain() {
     // Erases the tile at row, col (providing the illusion of motion).
     board.clearTileAt(row, col);
     // The board can answer its height and width.
-    row = (row + 1) % board.height();
-    col = (col + 1) % board.width();
+    row = (row + 1) % board.rowCount();
+    col = (col + 1) % board.colCount();
     // Wait 0.2s for user input (the param / 10 seconds).
     char cmd = board.nextCommandKey(2);
     done = cmd == 'q' || cmd == 'Q';

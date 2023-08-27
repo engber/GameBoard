@@ -137,7 +137,7 @@ void SnakeTestMain() {
 
     int nextRow = firstNode->row + dr;
     int nextCol = firstNode->col + dc;
-    if (nextRow >= 0 && nextRow < board.height() && nextCol >= 0 && nextCol < board.width()) {
+    if (nextRow >= 0 && nextRow < board.rowCount() && nextCol >= 0 && nextCol < board.colCount()) {
       if (board.glyphAt(nextRow, nextCol) == '\0') {
         firstNode = NewFirstNode(snake, nextRow, nextCol);
         SnakeNode *lastNode = RemoveLastNode(snake);

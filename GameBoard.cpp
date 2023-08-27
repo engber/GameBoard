@@ -14,12 +14,12 @@ enum : int {
   kIllegalCoord = std::numeric_limits<int>::max(),
 };
 
-GameBoard::GameBoard(int width, int height) {
-  if (width < 0 || height < 0  || width > maxWidth || height > maxHeight) {
-    throw std::out_of_range("GameBoard:: width & height must be 1..50");
+GameBoard::GameBoard(int rowCount, int colCount) {
+  if (rowCount < 0 || colCount < 0  || rowCount > maxRowCount || colCount > maxColCount) {
+    throw std::out_of_range("GameBoard:: rowCount & colCount must be 1..50");
   }
-  _width = width;
-  _height = height;
+  _rowCount = rowCount;
+  _colCount = colCount;
 
   _highlightedRow = kIllegalCoord;
   _highlightedCol = kIllegalCoord;
@@ -27,7 +27,7 @@ GameBoard::GameBoard(int width, int height) {
   _dirtyHighlightedCol = kIllegalCoord;
   _highlightedCoordsColor  = Color::blue;
   
-  _tiles = new Tile[_width * _height]();
+  _tiles = new Tile[_rowCount * _colCount]();
 }
 
 GameBoard::~GameBoard() { delete[] _tiles; }
@@ -63,14 +63,14 @@ void GameBoard::setMessage(string newMessage) {
 }
 
 void GameBoard::rangeCheck(int row, int col) const {
-  if (row < 0 || col < 0 || row >= _height || col >= _width) {
-    throw std::out_of_range("GameBoard:: illegal row or col");
+  if (row < 0 || col < 0 || row >= _rowCount || col >= _colCount) {
+    throw std::out_of_range("GameBoard:: illegal row("s + to_string(row) + ") or col(" + to_string(col) + ")");
   }
 }
 
 unsigned GameBoard::tileIndex(int row, int col) const {
   rangeCheck(row, col);
-  return row * _width + col;
+  return row * _colCount + col;
 }
 
 Tile GameBoard::tileAt(int row, int col) const {
@@ -103,8 +103,8 @@ void GameBoard::setGlyphAt(int row, int col, char glyph) {
 
 void GameBoard::clearAllTiles() {
   Tile blank = Tile();
-  for (int r = 0; r < _height; ++r) {
-    for (int c = 0; c < _width; ++c) {
+  for (int r = 0; r < _rowCount; ++r) {
+    for (int c = 0; c < _colCount; ++c) {
       setTileAt(r, c, blank);
     }
   }
@@ -115,7 +115,7 @@ void GameBoard::clearTileAt(int row, int col) {
 }
 
 void GameBoard::setDirtyOnAllTiles(bool dirty) const {
-  unsigned tileCount = _width * _height;
+  unsigned tileCount = _rowCount * _colCount;
   for (unsigned i = 0; i < tileCount; ++i) {
     _tiles[i] = Tile(_tiles[i], dirty);
   }
@@ -224,7 +224,7 @@ void GameBoard::drawTop(bool showCoords) const {
 
   if (showCoords) {
     cout << indent << ' ';
-    for (int c = 0; c < _width; ++c) {
+    for (int c = 0; c < _colCount; ++c) {
       bool highlight = _vt100Mode && c == _highlightedCol;
       if (highlight) {
         Tile::colorStart(_highlightedCoordsColor);
@@ -243,7 +243,7 @@ void GameBoard::drawTop(bool showCoords) const {
     cout << endl;
 
     cout << indent << ' ';
-    for (int c = 0; c < _width; ++c) {
+    for (int c = 0; c < _colCount; ++c) {
       bool highlight = _vt100Mode && c == _highlightedCol;
       if (highlight) {
         Tile::colorStart(_highlightedCoordsColor);
@@ -262,7 +262,7 @@ void GameBoard::drawTop(bool showCoords) const {
   cout << indent;
   cout << topLeftCornerGlyph();
   char line = horizontalLineGlyph();
-  int drawCount = 2 * _width - 1;
+  int drawCount = 2 * _colCount - 1;
   for (int c = 0; c < drawCount; c++) {
     cout << line;
   }
@@ -278,7 +278,7 @@ void GameBoard::drawBottom(bool showCoords) const {
   cout << indent;
   cout << bottomLeftCornerGlyph();
   char line = horizontalLineGlyph();
-  int drawCount = 2 * _width - 1;
+  int drawCount = 2 * _colCount - 1;
   for (int c = 0; c < drawCount; c++) {
     cout << line;
   }
@@ -288,7 +288,7 @@ void GameBoard::drawBottom(bool showCoords) const {
 
   if (showCoords) {
     cout << indent << ' ';
-    for (int c = 0; c < _width; ++c) {
+    for (int c = 0; c < _colCount; ++c) {
       bool highlight = _vt100Mode && c == _highlightedCol;
       if (highlight) {
         Tile::colorStart(_highlightedCoordsColor);
@@ -303,7 +303,7 @@ void GameBoard::drawBottom(bool showCoords) const {
     cout << endl;
 
     cout << indent << ' ';
-    for (int c = 0; c < _width; ++c) {
+    for (int c = 0; c < _colCount; ++c) {
       if (c < 10) {
         cout << "  ";
       } else {
@@ -341,7 +341,7 @@ void GameBoard::drawRow(int row, bool showCoords) const {
   cout << verticalLineGlyph();
 
   displayedTileAt(row, 0).draw(_displayEmptyTileDots);
-  for (int c = 1; c < _width; c++) {
+  for (int c = 1; c < _colCount; c++) {
     cout << ' '; // a space between cols makes the board appear more "square."
     Tile tile = displayedTileAt(row, c);
 
@@ -381,7 +381,7 @@ void GameBoard::redraw() const {
 
   drawTop(_displayCoords);
 
-  for (int r = 0; r < _height; r++) {
+  for (int r = 0; r < _rowCount; r++) {
     drawRow(r, _displayCoords);
   }
 
@@ -403,8 +403,8 @@ void GameBoard::update() const {
   int vt100CoordOffset = _displayCoords ? 2 : 0;
 
   unsigned tileIndex = 0;
-  for (int r = 0; r < _height; ++r) {
-    for (int c = 0; c < _width; ++c) {
+  for (int r = 0; r < _rowCount; ++r) {
+    for (int c = 0; c < _colCount; ++c) {
       Tile tile(_tiles[tileIndex]);
       if (tile.isDirty()) {
         // vt100 numbers rows/cols starting with one.
@@ -435,7 +435,7 @@ void GameBoard::updateMessage() const {
   if (_dirtyMessageLineCount > 0) {
       for (int i = 0; i < _dirtyMessageLineCount; ++i) {
         // vt100 numbers rows/cols starting with one.
-        int vt100Row = _height + i + 3 + coordRowCount;
+        int vt100Row = _rowCount + i + 3 + coordRowCount;
         int vt100Col = 0;
         printf("\x1B[%u;%uH\x1B[2K", vt100Row, vt100Col); // position cursor & erase line
         }
@@ -444,7 +444,7 @@ void GameBoard::updateMessage() const {
 
   if (_message.length() > 0) {
     // vt100 numbers rows/cols starting with one.
-    unsigned vt100Row = _height + 3 + coordRowCount;
+    unsigned vt100Row = _rowCount + 3 + coordRowCount;
     unsigned vt100Col = 0;
     printf("\x1B[%d;%dH", vt100Row, vt100Col); // position cursor
     cout << _message << endl;
@@ -454,7 +454,7 @@ void GameBoard::updateMessage() const {
 void GameBoard::updateRowCoords(int row) const {
   int vt100Row = row + 4;
   int vt100ColLeft = 1;
-  int vt100ColRight = _width*2 + 4;
+  int vt100ColRight = _colCount*2 + 4;
   printf("\x1B[%d;%dH%2d", vt100Row, vt100ColLeft, row);
   printf("\x1B[%d;%dH%-2d", vt100Row, vt100ColRight, row);
 }
@@ -462,8 +462,8 @@ void GameBoard::updateRowCoords(int row) const {
 void GameBoard::updateColCoords(int col) const {
   int vt100Row0 = 1;
   int vt100Row1 = 2;
-  int vt100Row3 = _height + 5;
-  int vt100Row4 = _height + 6;
+  int vt100Row3 = _rowCount + 5;
+  int vt100Row4 = _rowCount + 6;
   int vt100Col = col*2 + 4;
 
   if (col > 9) {

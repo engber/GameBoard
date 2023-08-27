@@ -65,10 +65,10 @@ void GameBoardTestMain() {
         myRow = max(myRow - 1, 0);
         break;
       case arrowDownKey:
-        myRow = min(myRow + 1, (int)board.height() - 1);
+        myRow = min(myRow + 1, (int)board.rowCount() - 1);
         break;
       case arrowRightKey:
-        myCol = min(myCol + 1, (int)board.width() - 1);
+        myCol = min(myCol + 1, (int)board.colCount() - 1);
         break;
       case arrowLeftKey:
         myCol = max(myCol - 1, 0);
@@ -80,19 +80,19 @@ void GameBoardTestMain() {
         }
         break;
       case arrowUpRightKey:
-        if (myRow > 0 && myCol < board.width() - 1) {
+        if (myRow > 0 && myCol < board.colCount() - 1) {
           --myRow;
           ++myCol;
         }
         break;
       case arrowDownLeftKey:
-        if (myRow < board.height() - 1 && myCol > 0) {
+        if (myRow < board.rowCount() - 1 && myCol > 0) {
           ++myRow;
           --myCol;
         }
         break;
       case arrowDownRightKey:
-        if (myRow < board.height() - 1 && myCol < board.width() - 1) {
+        if (myRow < board.rowCount() - 1 && myCol < board.colCount() - 1) {
           ++myRow;
           ++myCol;
         }
