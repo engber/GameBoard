@@ -8,7 +8,7 @@ Currently, this is being devloped/tested for the console in [Replit](https://rep
 # Basic Usage
 
 ```
-  GameBoard board(20, 15);
+  GameBoard board(15, 20);
 
   bool done = false;
   int row = 5, col = 3;
@@ -20,9 +20,8 @@ Currently, this is being devloped/tested for the console in [Replit](https://rep
 
     // Erases the tile at row, col (providing the illusion of motion).
     board.clearTileAt(row, col);
-    // The board can answer its height and width.
-    row = (row + 1) % board.height();
-    col = (col + 1) % board.width();
+    row = (row + 1) % board.rowCount();
+    col = (col + 1) % board.colCount();
     // Wait 0.2s for user input (the param / 10 seconds).
     char cmd = board.nextCommandKey(2);
     done = cmd == 'q' || cmd == 'Q';
@@ -31,9 +30,9 @@ Currently, this is being devloped/tested for the console in [Replit](https://rep
 
 # GameBoard
 
-GameBoards are 2D grids of tiles. The top-left is row = 0, col = 0. The bottom-right tile is row = height - 1, col = width - 1.
+GameBoards are 2D grids of tiles. The top-left is row = 0, col = 0. The bottom-right tile is row = rowCount - 1, col = colCount - 1.
 
-The constants, `GameBoard::maxWidth` and `GameBoard::maxHeight`, specify the maximum size, currently 50x50.
+The constants, `GameBoard::maxRowCount` and `GameBoard::maxColCount`, specify the maximum size, currently 50x50.
 
 The simplest usage pattern is to have a main loop draw the board each round:
   1. Use `setTileAt` to place tiles at the desired locations.
