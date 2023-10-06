@@ -337,19 +337,20 @@ void GameBoard::drawRow(int row, bool showCoords) const {
     }
   }
 
+  // Escape mode interprets chars as special vt100 graphic glyphs.
   vt100GraphicsStart();
   cout << verticalLineGlyph();
+  vt100GraphicsEnd();
 
   displayedTileAt(row, 0).draw(_displayEmptyTileDots);
   for (int c = 1; c < _colCount; c++) {
     cout << ' '; // a space between cols makes the board appear more "square."
     Tile tile = displayedTileAt(row, c);
-
-    // Escape mode interprets chars as special vt100 graphic glyphs.
-    vt100GraphicsEnd();
     tile.draw(_displayEmptyTileDots);
-    vt100GraphicsStart();
   }
+
+  // Escape mode interprets chars as special vt100 graphic glyphs.
+  vt100GraphicsStart();
   cout << verticalLineGlyph();
   vt100GraphicsEnd();
 
