@@ -8,6 +8,7 @@ Currently, this is being devloped/tested for the console in [Replit](https://rep
 # Basic Usage
 
 ```
+  // Construct a board with 15 rows & 20 columns.
   GameBoard board(15, 20);
 
   bool done = false;
