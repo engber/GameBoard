@@ -83,8 +83,6 @@ private:
   bool _displayEmptyTileDots = true;
   mutable bool _redrawNeeded = true;
   mutable unsigned _dirtyMessageLineCount = 0;
-  unsigned _defaultTileGlyph = ' ';
-  unsigned _defaultTileColor = 0;
   int _rowCount;
   int _colCount;
   int _highlightedRow;
