@@ -33,14 +33,16 @@ Currently, this is being devloped/tested for the console in [Replit](https://rep
 
 GameBoards are 2D grids of tiles. The top-left is row = 0, col = 0. The bottom-right tile is row = rowCount - 1, col = colCount - 1.
 
-The constants, `GameBoard::maxRowCount` and `GameBoard::maxColCount`, specify the maximum size, currently 50x50.
-
 The simplest usage pattern is to have a main loop draw the board each round:
   1. Use `setTileAt` to place tiles at the desired locations.
   2. Call `updateConsole` to display the board.
   3. Call `nextCommandKey` to determine what to do next.
 
+## Console Size Considerations
 
+It's important the console be large enough, in terms of rows/columns, to hold the gameboard. If it's too small it won't draw correctly. If you have a small screen and are having trouble resizing the console to be large engouh. In Replit you can try adjusting the console's font size using cmd +/-, on a Mac, or ctrl +/-, on Windows.
+
+Currently, the max size of a `GameBoard` is limited to 50x50 by the private enum constants, `kMaxRowCount` and `kMaxColCount`.
 
 ## Tiles & Colors
 

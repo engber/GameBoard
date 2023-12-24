@@ -10,12 +10,17 @@
 
 using namespace std;
 
+enum {
+  kMaxRowCount = 50,
+  kMaxColCount = 50,
+};
+
 enum : int {
   kIllegalCoord = std::numeric_limits<int>::max(),
 };
 
 GameBoard::GameBoard(int rowCount, int colCount) {
-  if (rowCount < 0 || colCount < 0  || rowCount > maxRowCount || colCount > maxColCount) {
+  if (rowCount < 0 || colCount < 0  || rowCount > kMaxRowCount || colCount > kMaxColCount) {
     throw std::out_of_range("GameBoard:: rowCount & colCount must be 1..50");
   }
   _rowCount = rowCount;

@@ -12,11 +12,6 @@ enum Color : unsigned char;
 class GameBoard {
 public:
 
-enum {
-  maxRowCount = 50,
-  maxColCount = 50,
-};
-
   GameBoard(int rowCount = 10, int colCount = 10);
   ~GameBoard();
 
