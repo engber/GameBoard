@@ -62,6 +62,19 @@ Colors are specified using the `Color` `enum` constants (e.g. `Color::blue`).
 
 The `nextCommandKey` method returns the key a user pressed. The `timeout` parameter determines how long to wait for the keypress. A `timeout` of zero means wait indefinitely - only returning once a key has been pressed. A non-zero `timeout` specifies the maximum time, in tenths of a second, to wait for a keypress. When a key is pressed it immediately returns that key. If after the timeout elapses, no key was pressed, it stops wating and returns `noKey`.
 
+## Message Lines and Logging
+
+`Gameboard` suports messages lines, displayed in a fixed location, underneath the board, which you can use to display information to the player. See `setMessage` below.
+
+In addition, `Gameboard` also supports logging transitory information below the message lines. There are a fixed number of lines of logging. Once that number is exceeded, the oldest line is scrolled out.
+
+To accomplish `Gameboard` overrides the instertion operator, `<<`, to support logging. E.g.
+```
+  myGameBoard << "this line will be logged" << endl;
+```
+
+The number of log lines can be configured using `setLogLineCount`.
+
 ## GameBoard Methods
 
 `void updateConsole()`  
@@ -89,10 +102,12 @@ These methods are convenient alternatives to setting empty tiles.
 Glyph accessors provide an alternative to the tile accessors, for when you don't care about color.
 
 
-`std::string message() const;`  
-`void setMessage(std::string newMessage = "");`  
-Messages are displayed below the board. Use newlines for multiple lines.
+`std::string message(int messageLineNumber = 0) const;`  
+`void setMessage(std::string newMessage = "", int messageLineNumber = 0);`  
+Messages are displayed below the board. Currently, only two message lines are supported, `0` and `1`. 
 
+`void setLogLineCount(int count);`
+This method configures how many lines are logged, below the board _and_ below the message lines, before the lines start scrolling. The default line count is 5. 
 
 `bool displayCoords() const`  
 `void setDisplayCoords(bool displayCoords);`  

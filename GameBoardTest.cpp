@@ -24,7 +24,6 @@ void GameBoardTestMain() {
   
   int myRow = 5;
   int myCol = 5;
-  int messageLineCount = 1;
   unsigned time = 0;
   
   GameBoard board(20, 20);
@@ -40,15 +39,7 @@ void GameBoardTestMain() {
       board.setHighlightedCoords();
     }
 
-    if (messageLineCount > 0) {
-      string message = StatusLine(board, highlightCoords, time);
-      for (unsigned i = 1; i < messageLineCount; ++i) {
-        message.append("\nblah blah blah");
-      }
-      board.setMessage(message);
-    } else {
-      board.setMessage();
-    }
+    board.setMessage(StatusLine(board, highlightCoords, time));
 
     board.updateConsole();
 
@@ -122,9 +113,12 @@ void GameBoardTestMain() {
       case '4':
       case '5':
       case '6':
-        messageLineCount = cmd - '0';
+      case '7':
+      case '8':
+      case '9':
+        board << "logging a digit: " << (cmd - '0') << endl;
         break;
-      case 'q':
+case 'q':
       case 'Q':
         done = true;
         break;

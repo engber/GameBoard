@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <exception>
-#include <iostream>
 #include <limits>
 
 using namespace std;
@@ -20,7 +19,8 @@ enum : int {
 };
 
 GameBoard::GameBoard(int rowCount, int colCount) {
-  if (rowCount < 0 || colCount < 0  || rowCount > kMaxRowCount || colCount > kMaxColCount) {
+  if (rowCount < 0 || colCount < 0 || rowCount > kMaxRowCount ||
+      colCount > kMaxColCount) {
     throw std::out_of_range("GameBoard:: rowCount & colCount must be 1..50");
   }
   _rowCount = rowCount;
@@ -30,8 +30,8 @@ GameBoard::GameBoard(int rowCount, int colCount) {
   _highlightedCol = kIllegalCoord;
   _dirtyHighlightedRow = kIllegalCoord;
   _dirtyHighlightedCol = kIllegalCoord;
-  _highlightedCoordsColor  = Color::blue;
-  
+  _highlightedCoordsColor = Color::blue;
+
   _tiles = new Tile[_rowCount * _colCount]();
 }
 
@@ -56,20 +56,81 @@ void GameBoard::setDisplayEmptyTileDots(bool displayEmptyTileDots) {
   _displayEmptyTileDots = displayEmptyTileDots;
 }
 
-string GameBoard::message() const {
-  return _message;
+string GameBoard::message(int messageLineNumber) const {
+  if (messageLineNumber < 0 || messageLineNumber > 1) {
+    throw std::out_of_range("GameBoard:: illegal message line number:" +
+                            to_string(messageLineNumber));
+  }
+  return _messageLines[messageLineNumber];
 }
 
-void GameBoard::setMessage(string newMessage) {
-  if (_message != newMessage) {
-    _dirtyMessageLineCount = std::count(_message.begin(), _message.end(), '\n') + 1;
-    _message = newMessage;
+void GameBoard::setMessage(string newMessage, int messageLineNumber) {
+  if (messageLineNumber < 0 || messageLineNumber > 1) {
+    throw std::out_of_range("GameBoard:: illegal message line number:" +
+                            to_string(messageLineNumber));
   }
+
+  auto newLineCount = std::count(newMessage.begin(), newMessage.end(), '\n');
+
+  if (messageLineNumber == 0) {
+    if (newLineCount > 1) {
+      throw std::out_of_range(
+          "GameBoard:: illegal message: only one newline allowed.");
+    } else if (newLineCount == 0) {
+      _messageLines[0] = newMessage;
+    } else {
+      // A message for line zero containing a _single_ newline is interpreted as
+      // two messages.
+      size_t index = newMessage.find('\n');
+      _messageLines[0] = newMessage.substr(0, index);
+      _messageLines[1] = newMessage.substr(index + 1);
+    }
+  } else {
+    if (newLineCount > 0) {
+      throw std::out_of_range(
+          "GameBoard:: illegal message: newlines not allowed.");
+    }
+    _messageLines[1] = newMessage;
+  }
+
+  drawMessage();
+}
+
+void GameBoard::log(std::string str) {
+  _logLines.push_back(str);
+  if (_logLines.size() > _logLineCount) {
+    _logLines.erase(_logLines.begin());
+  }
+  drawLog();
+}
+
+void GameBoard::handleInsertion() {
+  string str = _stringStream.str();
+  size_t strIndex = 0;
+  size_t newlineIndex = string::npos;
+
+  while ((newlineIndex = str.find('\n', strIndex)) != string::npos) {
+    log(str.substr(strIndex, newlineIndex - strIndex));
+    strIndex = newlineIndex + 1;
+  }
+
+  if (strIndex > 0) {
+    string remainder = str.substr(strIndex);
+    _stringStream.str(remainder);
+    _stringStream.rdbuf()->pubseekpos(remainder.length());
+  }
+}
+
+GameBoard &GameBoard::operator<<(std::ostream &(*func)(std::ostream &)) {
+  func(_stringStream);
+  handleInsertion();
+  return *this;
 }
 
 void GameBoard::rangeCheck(int row, int col) const {
   if (row < 0 || col < 0 || row >= _rowCount || col >= _colCount) {
-    throw std::out_of_range("GameBoard:: illegal row("s + to_string(row) + ") or col(" + to_string(col) + ")");
+    throw std::out_of_range("GameBoard:: illegal row("s + to_string(row) +
+                            ") or col(" + to_string(col) + ")");
   }
 }
 
@@ -115,9 +176,7 @@ void GameBoard::clearAllTiles() {
   }
 }
 
-void GameBoard::clearTileAt(int row, int col) {
-  setTileAt(row, col, Tile());
-}
+void GameBoard::clearTileAt(int row, int col) { setTileAt(row, col, Tile()); }
 
 void GameBoard::setDirtyOnAllTiles(bool dirty) const {
   unsigned tileCount = _rowCount * _colCount;
@@ -127,21 +186,21 @@ void GameBoard::setDirtyOnAllTiles(bool dirty) const {
 }
 
 void GameBoard::setHighlightedCoords_(int row, int col) {
-/* Setting new coords to be highlighted requires remember to previous coords
-so they can be redrawn un-highlighted. The data members, _dirtyHighlightedRow
-and _dirtyHighlightedCol are used to remember them. A value of kIllegalCoord
-indicate there is no previous coord to unhighlight. Redrawing will reset
-_dirtyHighlightedRow and _dirtyHighlightedCol to kIllegalCoord.
+  /* Setting new coords to be highlighted requires remember to previous coords
+  so they can be redrawn un-highlighted. The data members, _dirtyHighlightedRow
+  and _dirtyHighlightedCol are used to remember them. A value of kIllegalCoord
+  indicate there is no previous coord to unhighlight. Redrawing will reset
+  _dirtyHighlightedRow and _dirtyHighlightedCol to kIllegalCoord.
 
-Note: only set _dirtyHighlightedRow and _dirtyHighlightedCol once.
-When the highlighted coords are changed multiple times before redrawing,
-we only need to handle the _first_ set of previous coords.
- */
+  Note: only set _dirtyHighlightedRow and _dirtyHighlightedCol once.
+  When the highlighted coords are changed multiple times before redrawing,
+  we only need to handle the _first_ set of previous coords.
+   */
   if (_highlightedRow != row) {
     if (_dirtyHighlightedRow == kIllegalCoord) {
       _dirtyHighlightedRow = _highlightedRow;
     }
-      _highlightedRow = row;
+    _highlightedRow = row;
   }
 
   if (_highlightedCol != col) {
@@ -161,8 +220,8 @@ void GameBoard::setHighlightedCoords() {
   setHighlightedCoords_(kIllegalCoord, kIllegalCoord);
 };
 
-
-// Use vt100GraphicsStart/vt100GraphicsEnd to bracket printing to stdout draw VT100 graphics characters.
+// Use vt100GraphicsStart/vt100GraphicsEnd to bracket printing to stdout draw
+// VT100 graphics characters.
 
 void GameBoard::vt100GraphicsStart() const {
   if (_vt100Mode) {
@@ -218,7 +277,7 @@ void GameBoard::updateConsole() const {
     update();
   }
 }
-  
+
 void GameBoard::redrawConsole() const {
   _redrawNeeded = true;
   updateConsole();
@@ -236,7 +295,7 @@ void GameBoard::drawTop(bool showCoords) const {
       }
 
       if (c > 9) {
-        cout << c/10 << ' ';
+        cout << c / 10 << ' ';
       } else {
         cout << "  ";
       }
@@ -299,7 +358,7 @@ void GameBoard::drawBottom(bool showCoords) const {
         Tile::colorStart(_highlightedCoordsColor);
       }
 
-      cout << ((c < 10) ? c : c/10) << ' ';
+      cout << ((c < 10) ? c : c / 10) << ' ';
 
       if (highlight) {
         Tile::colorEnd(_highlightedCoordsColor);
@@ -393,19 +452,18 @@ void GameBoard::redraw() const {
 
   drawBottom(_displayCoords);
 
-  if (_message.length() > 0) {
-    cout << _message << endl;
-  }
+  drawMessage();
+  drawLog();
 
   setDirtyOnAllTiles(false);
-  _dirtyMessageLineCount = 0;
   _dirtyHighlightedRow = kIllegalCoord;
   _dirtyHighlightedCol = kIllegalCoord;
 }
 
 void GameBoard::update() const {
-  cout << "\x1B" "7"; // save cursor & attrs
-  
+  cout << "\x1B"
+          "7"; // save cursor & attrs
+
   int vt100CoordOffset = _displayCoords ? 2 : 0;
 
   unsigned tileIndex = 0;
@@ -430,37 +488,57 @@ void GameBoard::update() const {
     updateHighlightedCoords();
   }
 
-  updateMessage();
-
-  cout << "\x1B" "8"; // restore cursor & attrs
+  cout << "\x1B"
+          "8"; // restore cursor & attrs
 }
 
-void GameBoard::updateMessage() const {
-  int coordRowCount = _displayCoords ? 4 : 0;
+int GameBoard::firstLogLineVT100Row() const {
+  return firstMessageLineVT100Row() + _messageLines.size();
+}
 
-  if (_dirtyMessageLineCount > 0) {
-      for (int i = 0; i < _dirtyMessageLineCount; ++i) {
-        // vt100 numbers rows/cols starting with one.
-        int vt100Row = _rowCount + i + 3 + coordRowCount;
-        int vt100Col = 0;
-        printf("\x1B[%u;%uH\x1B[2K", vt100Row, vt100Col); // position cursor & erase line
-        }
-      _dirtyMessageLineCount = 0;
+int GameBoard::firstMessageLineVT100Row() const {
+  return _rowCount + 3 + (_displayCoords ? 4 : 0);
+}
+
+void GameBoard::drawMessage() const {
+  cout << "\x1B"
+          "7"; // save cursor & attrs
+
+  int firstRow = firstMessageLineVT100Row();
+  size_t messageCount = _messageLines.size();
+  for (int i = 0; i < messageCount; ++i) {
+    printf("\x1B[%u;%uH\x1B[2K", firstRow + i,
+           0); // position cursor & erase line
+    cout << _messageLines[i] << endl;
   }
 
-  if (_message.length() > 0) {
-    // vt100 numbers rows/cols starting with one.
-    unsigned vt100Row = _rowCount + 3 + coordRowCount;
-    unsigned vt100Col = 0;
-    printf("\x1B[%d;%dH", vt100Row, vt100Col); // position cursor
-    cout << _message << endl;
+  cout << "\x1B"
+          "8"; // restore cursor & attrs
+}
+
+void GameBoard::drawLog() const {
+  int firstRow = firstLogLineVT100Row();
+  size_t logCount = _logLines.size();
+  for (int i = 0; i < logCount; ++i) {
+    printf("\x1B[%u;%uH\x1B[2K", firstRow + i,
+           0); // position cursor & erase line
+    cout << _logLines[i] << endl;
   }
+}
+
+void GameBoard::setLogLineCount(int count) {
+  // Intended to be called _before_ the board is first drawn.
+  // No attempt is made to update existing log lines in the console.
+  while (_logLines.size() > count) {
+    _logLines.erase(_logLines.begin());
+  }
+  _logLineCount = count;
 }
 
 void GameBoard::updateRowCoords(int row) const {
   int vt100Row = row + 4;
   int vt100ColLeft = 1;
-  int vt100ColRight = _colCount*2 + 4;
+  int vt100ColRight = _colCount * 2 + 4;
   printf("\x1B[%d;%dH%2d", vt100Row, vt100ColLeft, row);
   printf("\x1B[%d;%dH%-2d", vt100Row, vt100ColRight, row);
 }
@@ -470,32 +548,32 @@ void GameBoard::updateColCoords(int col) const {
   int vt100Row1 = 2;
   int vt100Row3 = _rowCount + 5;
   int vt100Row4 = _rowCount + 6;
-  int vt100Col = col*2 + 4;
+  int vt100Col = col * 2 + 4;
 
   if (col > 9) {
-      printf("\x1B[%d;%dH%-2d", vt100Row0, vt100Col, col/10);
-      printf("\x1B[%d;%dH%-2d", vt100Row4, vt100Col, col%10);
+    printf("\x1B[%d;%dH%-2d", vt100Row0, vt100Col, col / 10);
+    printf("\x1B[%d;%dH%-2d", vt100Row4, vt100Col, col % 10);
   }
-  
-  printf("\x1B[%d;%dH%-2d", vt100Row1, vt100Col, col%10);
-  printf("\x1B[%d;%dH%-2d", vt100Row3, vt100Col, (col > 9) ? col/10 : col);
+
+  printf("\x1B[%d;%dH%-2d", vt100Row1, vt100Col, col % 10);
+  printf("\x1B[%d;%dH%-2d", vt100Row3, vt100Col, (col > 9) ? col / 10 : col);
 }
 
-void GameBoard::updateHighlightedCoords() const {  
+void GameBoard::updateHighlightedCoords() const {
   if (_highlightedRow != kIllegalCoord || _highlightedCol != kIllegalCoord) {
     Tile::colorStart(_highlightedCoordsColor);
     updateRowCoords(_highlightedRow);
     updateColCoords(_highlightedCol);
     Tile::colorEnd(_highlightedCoordsColor);
   }
-  
+
   if (_dirtyHighlightedRow != kIllegalCoord) {
     Tile::colorStart(Color::defaultColor);
     updateRowCoords(_dirtyHighlightedRow);
     Tile::colorEnd(Color::defaultColor);
     _dirtyHighlightedRow = kIllegalCoord;
   }
-  
+
   if (_dirtyHighlightedCol != kIllegalCoord) {
     Tile::colorStart(Color::defaultColor);
     updateColCoords(_dirtyHighlightedCol);
@@ -675,42 +753,40 @@ void GameBoard::printCommandKey(char cmd) {
 /*****************************************************************************/
 /*****************************************************************************/
 
-Tile::Tile(char glyph, Color color) : _glyph(glyph), _color(color), _dirty(false) {}
+Tile::Tile(char glyph, Color color)
+    : _glyph(glyph), _color(color), _dirty(false) {}
 
 Tile::Tile(char glyph) : Tile::Tile(glyph, Color::defaultColor) {}
 
-Tile::Tile(const Tile &tile, bool dirty) : Tile(tile) {
-  _dirty = dirty;
-}
+Tile::Tile(const Tile &tile, bool dirty) : Tile(tile) { _dirty = dirty; }
 
-bool Tile::operator== (const Tile &rhs) {
+bool Tile::operator==(const Tile &rhs) {
   return _glyph == rhs._glyph && _color == rhs._color;
 }
 
-bool Tile::operator!= (const Tile &rhs) {
-  return !(*this == rhs);
-}
+bool Tile::operator!=(const Tile &rhs) { return !(*this == rhs); }
 
-// Use colorStart/colorEnd to bracket printing to stdout to draw in the specified color.
+// Use colorStart/colorEnd to bracket printing to stdout to draw in the
+// specified color.
 
 void Tile::colorStart(Color color) {
   static const char *vt100ColorCodes[] = {
-  // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
-  
-  "\x1B[0m",    // default
-  "\x1B[30m",   // black
-  "\x1B[31m",   // red
-  "\x1B[32m",   // green
-  "\x1B[33m",   // yellow
-  "\x1B[34m",   // blue
-  "\x1B[35m",   // magenta
-  "\x1B[36m",   // cyan
-  "\x1B[37m",   // white
-  "\x1B[2;31m", // dark red
-  "\x1B[2;34m", // dark blue
-  "\x1B[2;37m", // dark white
+      // Display attribute syntax: <ESC>[{attr1};...;{attrn}m
+
+      "\x1B[0m",    // default
+      "\x1B[30m",   // black
+      "\x1B[31m",   // red
+      "\x1B[32m",   // green
+      "\x1B[33m",   // yellow
+      "\x1B[34m",   // blue
+      "\x1B[35m",   // magenta
+      "\x1B[36m",   // cyan
+      "\x1B[37m",   // white
+      "\x1B[2;31m", // dark red
+      "\x1B[2;34m", // dark blue
+      "\x1B[2;37m", // dark white
   };
-  
+
   cout << vt100ColorCodes[color];
 }
 

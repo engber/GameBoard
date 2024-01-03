@@ -2,6 +2,9 @@
 #define __GAME_BOARD_H__
 
 #include <string>
+#include <vector>
+#include <iostream>
+#include <sstream>
 
 class Tile;
 enum Color : unsigned char;
@@ -34,8 +37,10 @@ public:
   void updateConsole() const;
   void redrawConsole() const;
 
-  std::string message() const;
-  void setMessage(std::string newMessage = "");
+  std::string message(int messageLineNumber = 0) const;
+  void setMessage(std::string newMessage = "", int messageLineNumber = 0);
+
+  void setLogLineCount(int count);
 
   Tile tileAt(int row, int col) const;
   void setTileAt(int row, int col, Tile tile);
@@ -70,6 +75,16 @@ public:
   bool wasdKeyMode() const { return _wasdKeyMode; }
   void setWASDKeyMode(bool wasdKeyMode) { _wasdKeyMode = wasdKeyMode; }
 
+  template <typename T>
+  GameBoard& operator<<(T const& value) {
+    _stringStream << value;
+    handleInsertion();
+    return *this;
+  }
+
+  // Special case to handle endl - which is a function.
+  GameBoard& operator<<(std::ostream& (*func)(std::ostream&));
+
 private:
   bool _vt100Mode = true;
   bool _wasdKeyMode = false;
@@ -77,15 +92,17 @@ private:
   bool _nethackKeyMode = false;
   bool _displayEmptyTileDots = true;
   mutable bool _redrawNeeded = true;
-  mutable unsigned _dirtyMessageLineCount = 0;
   int _rowCount;
   int _colCount;
   int _highlightedRow;
   int _highlightedCol;
+  int _logLineCount = 5;
   mutable int _dirtyHighlightedRow;
   mutable int _dirtyHighlightedCol;
   Color _highlightedCoordsColor;
-  std::string _message;
+  std::vector<std::string> _logLines;
+  std::vector<std::string> _messageLines = {"", ""};
+  std::ostringstream _stringStream;
   Tile *_tiles;
 
   void clearScreen() const;
@@ -97,8 +114,12 @@ private:
   void drawTop(bool showCoords) const;
   void drawBottom(bool showCoords) const;
   void drawRow(int row, bool showCoords) const;
+  void drawLog() const;
+  void drawMessage() const;
 
-  void updateMessage() const;
+  void log(std::string str);
+  void handleInsertion();
+
   void updateRowCoords(int row) const;
   void updateColCoords(int row) const;
   void updateHighlightedCoords() const;
@@ -123,6 +144,9 @@ private:
   static char nethackCommandKey(char c);
   static char wasdCommandKey(char c);
   static char escapedCommandKey(char c);
+
+  int firstLogLineVT100Row() const;
+  int firstMessageLineVT100Row() const;
 };
 
 enum GameBoard::CommandKey : char {
