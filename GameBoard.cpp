@@ -1,3 +1,5 @@
+// GameBoard version 1.1
+
 #include "GameBoard.h"
 
 #include <termios.h>
@@ -96,10 +98,12 @@ void GameBoard::setMessage(string newMessage, int messageLineNumber) {
   drawMessage();
 }
 
-void GameBoard::log(std::string str) {
-  _logLines.push_back(str);
-  if (_logLines.size() > _logLineCount) {
-    _logLines.erase(_logLines.begin());
+void GameBoard::log(vector<string> strings) {
+  for (int i = 0; i < strings.size(); i++) {
+    _logLines.push_back(strings[i]);
+    if (_logLines.size() > _logLineCount) {
+      _logLines.erase(_logLines.begin());
+    }
   }
   drawLog();
 }
@@ -108,11 +112,13 @@ void GameBoard::handleInsertion() {
   string str = _stringStream.str();
   size_t strIndex = 0;
   size_t newlineIndex = string::npos;
+  vector<string>lines;
 
   while ((newlineIndex = str.find('\n', strIndex)) != string::npos) {
-    log(str.substr(strIndex, newlineIndex - strIndex));
+    lines.push_back(str.substr(strIndex, newlineIndex - strIndex));
     strIndex = newlineIndex + 1;
   }
+  log(lines);
 
   if (strIndex > 0) {
     string remainder = str.substr(strIndex);
@@ -524,6 +530,15 @@ void GameBoard::drawLog() const {
            0); // position cursor & erase line
     cout << _logLines[i] << endl;
   }
+}
+
+void GameBoard::clearLog() {
+  int firstRow = firstLogLineVT100Row();
+  for (int i = 0; i < _logLineCount; ++i) {
+    printf("\x1B[%u;%uH\x1B[2K", firstRow + i,
+           0); // position cursor & erase line
+  }
+  _logLines.clear();
 }
 
 void GameBoard::setLogLineCount(int count) {

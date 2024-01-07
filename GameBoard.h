@@ -1,3 +1,4 @@
+// GameBoard version 1.1
 #ifndef __GAME_BOARD_H__
 #define __GAME_BOARD_H__
 
@@ -48,6 +49,7 @@ public:
 
   void clearAllTiles();
   void clearTileAt(int row, int col);
+  void clearLog();
 
   char glyphAt(int row, int col) const;
   void setGlyphAt(int row, int col, char glyph);
@@ -117,7 +119,8 @@ private:
   void drawLog() const;
   void drawMessage() const;
 
-  void log(std::string str);
+  // void log(std::string str);
+  void log(std::vector<std::string> strings);
   void handleInsertion();
 
   void updateRowCoords(int row) const;

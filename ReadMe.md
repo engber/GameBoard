@@ -73,7 +73,7 @@ To accomplish `Gameboard` overrides the instertion operator, `<<`, to support lo
   myGameBoard << "this line will be logged" << endl;
 ```
 
-The number of log lines can be configured using `setLogLineCount`.
+The number of log lines can be configured using `setLogLineCount`. The lines that have been logged can be erased using `clearLog`.
 
 ## GameBoard Methods
 
@@ -96,6 +96,8 @@ These methods place characters on the board.
 `void clearTileAt(int row, int col);`  
 These methods are convenient alternatives to setting empty tiles.
 
+`void clearLog();`
+Erases the lines that have been logged.
 
 `char glyphAt(int row, int col) const;`  
 `void setGlyphAt(int row, int col, char glyph);`  
